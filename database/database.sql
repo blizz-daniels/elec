@@ -1,0 +1,340 @@
+CREATE DATABASE IF NOT EXISTS ogun_political CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ogun_political;
+
+CREATE TABLE roles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE permissions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL UNIQUE,
+    slug VARCHAR(150) NOT NULL UNIQUE,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE role_permissions (
+    role_id BIGINT UNSIGNED NOT NULL,
+    permission_id BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY (role_id, permission_id),
+    CONSTRAINT fk_rp_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rp_permission FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    role_id BIGINT UNSIGNED NOT NULL,
+    full_name VARCHAR(190) NOT NULL,
+    email VARCHAR(190) NOT NULL UNIQUE,
+    phone VARCHAR(30) NULL,
+    password VARCHAR(255) NOT NULL,
+    avatar_path VARCHAR(255) NULL,
+    status ENUM('active','inactive','locked') NOT NULL DEFAULT 'active',
+    last_login_at DATETIME NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE senatorial_districts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    slug VARCHAR(120) NOT NULL UNIQUE,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE lgas (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    senatorial_district_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(120) NOT NULL,
+    code VARCHAR(30) NOT NULL UNIQUE,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_lgas_senatorial FOREIGN KEY (senatorial_district_id) REFERENCES senatorial_districts(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE wards (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    lga_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(120) NOT NULL,
+    code VARCHAR(30) NOT NULL UNIQUE,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_wards_lga FOREIGN KEY (lga_id) REFERENCES lgas(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE polling_units (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    senatorial_district_id BIGINT UNSIGNED NOT NULL,
+    lga_id BIGINT UNSIGNED NOT NULL,
+    ward_id BIGINT UNSIGNED NOT NULL,
+    polling_code VARCHAR(50) NOT NULL UNIQUE,
+    polling_name VARCHAR(150) NOT NULL,
+    latitude DECIMAL(10,7) NULL,
+    longitude DECIMAL(10,7) NULL,
+    gps_address VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pu_senatorial FOREIGN KEY (senatorial_district_id) REFERENCES senatorial_districts(id),
+    CONSTRAINT fk_pu_lga FOREIGN KEY (lga_id) REFERENCES lgas(id),
+    CONSTRAINT fk_pu_ward FOREIGN KEY (ward_id) REFERENCES wards(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE members (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    membership_number VARCHAR(30) NOT NULL UNIQUE,
+    surname VARCHAR(100) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    other_name VARCHAR(100) NULL,
+    phone VARCHAR(30) NOT NULL,
+    email VARCHAR(190) NOT NULL UNIQUE,
+    state_of_origin VARCHAR(120) NOT NULL,
+    state_of_residence VARCHAR(120) NOT NULL DEFAULT 'Ogun State',
+    date_of_birth DATE NULL,
+    gender ENUM('male','female','other') NULL,
+    vin VARCHAR(50) NULL,
+    occupation VARCHAR(120) NULL,
+    residential_address TEXT NULL,
+    lga_id BIGINT UNSIGNED NULL,
+    ward_id BIGINT UNSIGNED NULL,
+    polling_unit_id BIGINT UNSIGNED NULL,
+    passport_path VARCHAR(255) NULL,
+    password VARCHAR(255) NOT NULL,
+    status ENUM('pending','approved','rejected','active','inactive') NOT NULL DEFAULT 'pending',
+    qr_code_path VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_members_lga FOREIGN KEY (lga_id) REFERENCES lgas(id) ON DELETE SET NULL,
+    CONSTRAINT fk_members_ward FOREIGN KEY (ward_id) REFERENCES wards(id) ON DELETE SET NULL,
+    CONSTRAINT fk_members_pu FOREIGN KEY (polling_unit_id) REFERENCES polling_units(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE member_cards (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    member_id BIGINT UNSIGNED NOT NULL,
+    card_number VARCHAR(50) NOT NULL UNIQUE,
+    qr_code_path VARCHAR(255) NULL,
+    pdf_path VARCHAR(255) NULL,
+    issued_at DATETIME NOT NULL,
+    expires_at DATETIME NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cards_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE state_executives (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    photo_path VARCHAR(255) NULL,
+    position VARCHAR(120) NOT NULL,
+    tenure VARCHAR(120) NULL,
+    biography TEXT NULL,
+    phone VARCHAR(30) NULL,
+    email VARCHAR(190) NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_state_exec_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE senatorial_executives (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    senatorial_district_id BIGINT UNSIGNED NOT NULL,
+    photo_path VARCHAR(255) NULL,
+    position VARCHAR(120) NOT NULL,
+    tenure VARCHAR(120) NULL,
+    biography TEXT NULL,
+    phone VARCHAR(30) NULL,
+    email VARCHAR(190) NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_sen_exec_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_sen_exec_sd FOREIGN KEY (senatorial_district_id) REFERENCES senatorial_districts(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE lga_executives (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    lga_id BIGINT UNSIGNED NOT NULL,
+    photo_path VARCHAR(255) NULL,
+    position VARCHAR(120) NOT NULL,
+    tenure VARCHAR(120) NULL,
+    biography TEXT NULL,
+    phone VARCHAR(30) NULL,
+    email VARCHAR(190) NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_lga_exec_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_lga_exec_lga FOREIGN KEY (lga_id) REFERENCES lgas(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE ward_executives (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    ward_id BIGINT UNSIGNED NOT NULL,
+    photo_path VARCHAR(255) NULL,
+    position VARCHAR(120) NOT NULL,
+    tenure VARCHAR(120) NULL,
+    biography TEXT NULL,
+    phone VARCHAR(30) NULL,
+    email VARCHAR(190) NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ward_exec_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ward_exec_ward FOREIGN KEY (ward_id) REFERENCES wards(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE polling_marshals (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    polling_unit_id BIGINT UNSIGNED NOT NULL,
+    ward_id BIGINT UNSIGNED NOT NULL,
+    photo_path VARCHAR(255) NULL,
+    phone VARCHAR(30) NULL,
+    email VARCHAR(190) NULL,
+    status ENUM('pending','active','suspended') NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pm_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_pm_pu FOREIGN KEY (polling_unit_id) REFERENCES polling_units(id),
+    CONSTRAINT fk_pm_ward FOREIGN KEY (ward_id) REFERENCES wards(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE elections (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(190) NOT NULL,
+    election_date DATE NOT NULL,
+    election_type VARCHAR(100) NOT NULL,
+    status ENUM('draft','open','closed','archived') NOT NULL DEFAULT 'draft',
+    description TEXT NULL,
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_elections_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE candidates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    election_id BIGINT UNSIGNED NOT NULL,
+    position VARCHAR(120) NOT NULL,
+    name VARCHAR(190) NOT NULL,
+    party VARCHAR(190) NULL,
+    photo_path VARCHAR(255) NULL,
+    biography TEXT NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_candidates_election FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE votes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    election_id BIGINT UNSIGNED NOT NULL,
+    candidate_id BIGINT UNSIGNED NOT NULL,
+    polling_unit_id BIGINT UNSIGNED NOT NULL,
+    accredited_voters INT UNSIGNED NOT NULL DEFAULT 0,
+    total_votes INT UNSIGNED NOT NULL DEFAULT 0,
+    rejected_votes INT UNSIGNED NOT NULL DEFAULT 0,
+    cancelled_votes INT UNSIGNED NOT NULL DEFAULT 0,
+    remarks TEXT NULL,
+    submitted_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_votes_election FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+    CONSTRAINT fk_votes_candidate FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
+    CONSTRAINT fk_votes_pu FOREIGN KEY (polling_unit_id) REFERENCES polling_units(id) ON DELETE CASCADE,
+    CONSTRAINT fk_votes_user FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE vote_results (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    election_id BIGINT UNSIGNED NOT NULL,
+    polling_unit_id BIGINT UNSIGNED NOT NULL,
+    submitted_by BIGINT UNSIGNED NULL,
+    status ENUM('submitted','pending','verified','approved','published','rejected') NOT NULL DEFAULT 'submitted',
+    accredited_voters INT UNSIGNED NOT NULL DEFAULT 0,
+    total_votes INT UNSIGNED NOT NULL DEFAULT 0,
+    rejected_votes INT UNSIGNED NOT NULL DEFAULT 0,
+    cancelled_votes INT UNSIGNED NOT NULL DEFAULT 0,
+    gps_location VARCHAR(255) NULL,
+    device_info VARCHAR(255) NULL,
+    submitted_at DATETIME NULL,
+    verified_at DATETIME NULL,
+    approved_at DATETIME NULL,
+    published_at DATETIME NULL,
+    remarks TEXT NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_results_election FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+    CONSTRAINT fk_results_pu FOREIGN KEY (polling_unit_id) REFERENCES polling_units(id) ON DELETE CASCADE,
+    CONSTRAINT fk_results_user FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE attachments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    related_type VARCHAR(100) NOT NULL,
+    related_id BIGINT UNSIGNED NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(120) NOT NULL,
+    file_size INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE notifications (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    title VARCHAR(190) NOT NULL,
+    message TEXT NOT NULL,
+    channel ENUM('system','email','sms') NOT NULL DEFAULT 'system',
+    status ENUM('unread','read','archived') NOT NULL DEFAULT 'unread',
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE activity_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    action VARCHAR(190) NOT NULL,
+    entity_type VARCHAR(100) NULL,
+    entity_id BIGINT UNSIGNED NULL,
+    ip_address VARCHAR(45) NULL,
+    device VARCHAR(255) NULL,
+    browser VARCHAR(255) NULL,
+    metadata JSON NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_activity_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE settings (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(190) NOT NULL UNIQUE,
+    setting_value LONGTEXT NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE password_resets (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(190) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE sessions (
+    id VARCHAR(128) PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    payload LONGTEXT NOT NULL,
+    last_activity INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
