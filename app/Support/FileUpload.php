@@ -8,7 +8,8 @@ final class FileUpload
 {
     public static function store(array $file, string $directory): string
     {
-        $baseDir = Config::basePath($directory);
+        $relativeDirectory = trim($directory, '/\\');
+        $baseDir = Config::basePath('public/' . $relativeDirectory);
         if (!is_dir($baseDir)) {
             mkdir($baseDir, 0775, true);
         }
@@ -21,6 +22,6 @@ final class FileUpload
             throw new \RuntimeException('Failed to upload file.');
         }
 
-        return trim($directory, '/\\') . '/' . $name;
+        return $relativeDirectory . '/' . $name;
     }
 }

@@ -17,7 +17,6 @@ use App\Controllers\SettingsController;
 use App\Core\Router;
 use App\Support\Config;
 use App\Support\Session;
-use Dotenv\Dotenv;
 
 final class Application
 {
@@ -33,35 +32,8 @@ final class Application
 
     private function boot(): void
     {
-        if (class_exists(Dotenv::class)) {
-            $dotenv = Dotenv::createImmutable($this->basePath);
-            if (file_exists($this->basePath . '/.env')) {
-                $dotenv->safeLoad();
-            }
-        } elseif (file_exists($this->basePath . '/.env')) {
-            $this->loadEnvFile($this->basePath . '/.env');
-        }
-
         Config::setBasePath($this->basePath);
         Session::start();
-    }
-
-    private function loadEnvFile(string $path): void
-    {
-        $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
-                continue;
-            }
-
-            [$key, $value] = array_map('trim', explode('=', $line, 2));
-            $value = trim($value, "\"'");
-            $_ENV[$key] = $value;
-            $_SERVER[$key] = $value;
-            putenv($key . '=' . $value);
-        }
     }
 
     private function routes(): Router
@@ -86,15 +58,23 @@ final class Application
         $router->get('/dashboard', [DashboardController::class, 'index']);
         $router->get('/member/dashboard', [MemberController::class, 'dashboard']);
         $router->get('/admin/members', [AdminModuleController::class, 'members']);
+        $router->post('/admin/members', [AdminModuleController::class, 'members']);
         $router->get('/admin/executives', [AdminModuleController::class, 'executives']);
+        $router->post('/admin/executives', [AdminModuleController::class, 'executives']);
         $router->get('/admin/geography', [AdminModuleController::class, 'geography']);
+        $router->post('/admin/geography', [AdminModuleController::class, 'geography']);
         $router->get('/admin/polling-units', [AdminModuleController::class, 'pollingUnits']);
+        $router->post('/admin/polling-units', [AdminModuleController::class, 'pollingUnits']);
         $router->get('/admin/marshals', [AdminModuleController::class, 'marshals']);
+        $router->post('/admin/marshals', [AdminModuleController::class, 'marshals']);
         $router->get('/admin/candidates', [AdminModuleController::class, 'candidates']);
+        $router->post('/admin/candidates', [AdminModuleController::class, 'candidates']);
         $router->get('/admin/audit-logs', [AdminModuleController::class, 'auditLogs']);
         $router->get('/profile', [AdminModuleController::class, 'profile']);
         $router->get('/elections', [ElectionController::class, 'index']);
+        $router->post('/elections', [ElectionController::class, 'index']);
         $router->get('/results', [ResultController::class, 'index']);
+        $router->post('/results', [ResultController::class, 'index']);
         $router->get('/reports', [ReportController::class, 'index']);
         $router->get('/notifications', [NotificationController::class, 'index']);
         $router->get('/settings', [SettingsController::class, 'index']);

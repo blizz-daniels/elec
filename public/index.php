@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 use App\Core\Application;
 
-$debug = false;
-$envFile = dirname(__DIR__) . '/.env';
-if (is_file($envFile)) {
-    $contents = file_get_contents($envFile) ?: '';
-    $debug = preg_match('/^APP_DEBUG\s*=\s*(true|1|yes)$/mi', $contents) === 1;
-}
+$configFile = dirname(__DIR__) . '/config.php';
+$config = is_file($configFile) ? (require $configFile) : [];
+$debug = (bool) ($config['APP_DEBUG'] ?? false);
 
 if ($debug) {
     ini_set('display_errors', '1');

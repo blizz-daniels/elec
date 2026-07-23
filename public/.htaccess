@@ -1,4 +1,8 @@
 RewriteEngine On
+Options -Indexes
+DirectoryIndex index.php
+
+# Allow cPanel/Namecheap to serve the app cleanly when /public is the web root.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]

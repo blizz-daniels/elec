@@ -16,9 +16,19 @@ PHP 8.3 + MySQL 8 MVC starter for membership registration, executive management,
 
 1. Import `database/database.sql` into MySQL.
 2. Import `database/seed.sql` after the schema.
-3. Copy `.env.example` to `.env` and update database credentials.
+3. Edit `config.php` with your database and domain settings.
 4. Run `composer install`.
 5. Point Apache document root to `public/`.
+
+## Namecheap / cPanel Deployment
+
+If you are uploading the full project to `public_html`, keep these in mind:
+
+1. Edit the root `config.php` file with your live host values.
+2. Upload the project files so the `public/` folder remains inside the app folder.
+3. Make sure the domain points to the `public/` folder if your hosting panel allows it.
+4. If the app lives in the domain root, the top-level `.htaccess` will forward requests to `public/index.php` and serve `public/assets` and `public/uploads`.
+5. Import `database/database.sql` first, then `database/seed.sql`.
 
 ## Laragon Test Login
 
