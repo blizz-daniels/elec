@@ -20,6 +20,22 @@ PHP 8.3 + MySQL 8 MVC starter for membership registration, executive management,
 4. Run `composer install`.
 5. Point Apache document root to `public/`.
 
+## Laragon Test Login
+
+Use the same password for every demo account:
+
+`Test@1234`
+
+| Role | Email |
+| --- | --- |
+| Super Admin | `superadmin@ogun.test` |
+| State Executive | `stateexec@ogun.test` |
+| Senatorial Executive | `senatorialexec@ogun.test` |
+| LGA Executive | `lgaexec@ogun.test` |
+| Ward Executive | `wardexec@ogun.test` |
+| Polling Marshal | `marshal@ogun.test` |
+| Registered Member | `member@ogun.test` |
+
 ## Notes
 
 - The project is intentionally scaffolded for safe extension.

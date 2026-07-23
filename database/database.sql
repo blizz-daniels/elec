@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS ogun_political CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE ogun_political;
+CREATE DATABASE IF NOT EXISTS ogun_political_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ogun_political_test;
 
 CREATE TABLE roles (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

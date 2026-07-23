@@ -1,17 +1,31 @@
-<div class="auth-grid">
-    <div class="auth-card">
-        <h1 class="h3 mb-3">Login</h1>
-        <form method="post" action="<?= url('/login'); ?>">
+<section class="auth-hero">
+    <div class="auth-hero__panel">
+        <div class="hero-badge mb-3">Secure portal access</div>
+        <h1 class="hero-title auth-hero__title">Welcome back to the Ogun State political portal.</h1>
+        <p class="hero-text auth-hero__text">
+            Sign in to manage members, monitor elections, approve submissions, and continue your dashboard workflow.
+        </p>
+    </div>
+    <div class="auth-card auth-card--theme">
+        <div class="auth-card__head">
+            <span class="info-label">Login</span>
+            <h2>Access your account</h2>
+            <p>Use your demo email and the shared test password to enter the Laragon test environment.</p>
+        </div>
+        <form method="post" action="<?= url('/login'); ?>" class="auth-form">
             <?= csrf_field(); ?>
             <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input class="form-control" type="email" name="email" required>
+                <label class="form-label fw-semibold">Email</label>
+                <input class="form-control form-control-lg" type="email" name="email" placeholder="Enter email address" required>
             </div>
             <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input class="form-control" type="password" name="password" required>
+                <label class="form-label fw-semibold">Password</label>
+                <input class="form-control form-control-lg" type="password" name="password" placeholder="Enter password" required>
             </div>
-            <button class="btn btn-primary w-100" type="submit">Sign In</button>
+            <button class="btn btn--accent w-100" type="submit">Sign In</button>
         </form>
+        <div class="auth-card__footer">
+            <a href="<?= url('/register'); ?>">Need a membership account? Register here.</a>
+        </div>
     </div>
-</div>
+</section>
