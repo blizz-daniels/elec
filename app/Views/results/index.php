@@ -25,7 +25,7 @@ $pollingUnits = $pollingUnits ?? [];
         </div>
         <div class="col-md-4">
             <label class="form-label">Polling unit</label>
-            <select class="form-select" name="polling_unit_id" required>
+            <select class="form-select" name="polling_unit_id" data-searchable-select data-searchable-placeholder="Type to search polling units" required>
                 <option value="">Select polling unit</option>
                 <?php foreach ($pollingUnits as $unit): ?>
                     <option value="<?= (int) $unit['id']; ?>"><?= htmlspecialchars((string) $unit['polling_name'], ENT_QUOTES, 'UTF-8'); ?></option>

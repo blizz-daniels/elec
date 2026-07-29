@@ -21,9 +21,26 @@ INSERT IGNORE INTO senatorial_districts (id, name, slug) VALUES
 (3, 'Ogun West', 'ogun-west');
 
 INSERT IGNORE INTO lgas (id, senatorial_district_id, name, code) VALUES
-(1, 1, 'Abeokuta South', 'OGN-LGA-001'),
-(2, 2, 'Ijebu Ode', 'OGN-LGA-002'),
-(3, 3, 'Ota', 'OGN-LGA-003');
+(1, 1, 'Abeokuta North', 'OGN-LGA-001'),
+(2, 1, 'Abeokuta South', 'OGN-LGA-002'),
+(3, 3, 'Ado-Odo/Ota', 'OGN-LGA-003'),
+(4, 1, 'Ewekoro', 'OGN-LGA-004'),
+(5, 1, 'Ifo', 'OGN-LGA-005'),
+(6, 2, 'Ijebu East', 'OGN-LGA-006'),
+(7, 2, 'Ijebu North', 'OGN-LGA-007'),
+(8, 2, 'Ijebu North-East', 'OGN-LGA-008'),
+(9, 2, 'Ijebu-Ode', 'OGN-LGA-009'),
+(10, 2, 'Ikenne', 'OGN-LGA-010'),
+(11, 3, 'Imeko Afon', 'OGN-LGA-011'),
+(12, 3, 'Ipokia', 'OGN-LGA-012'),
+(13, 1, 'Obafemi Owode', 'OGN-LGA-013'),
+(14, 1, 'Odeda', 'OGN-LGA-014'),
+(15, 2, 'Odogbolu', 'OGN-LGA-015'),
+(16, 2, 'Ogun Waterside', 'OGN-LGA-016'),
+(17, 2, 'Remo North', 'OGN-LGA-017'),
+(18, 2, 'Sagamu', 'OGN-LGA-018'),
+(19, 3, 'Yewa North', 'OGN-LGA-019'),
+(20, 3, 'Yewa South', 'OGN-LGA-020');
 
 INSERT IGNORE INTO wards (id, lga_id, name, code) VALUES
 (1, 1, 'Ake Ward', 'OGN-WRD-001'),

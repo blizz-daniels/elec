@@ -95,7 +95,7 @@ $pollingUnits = $pollingUnits ?? [];
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Voting Polling Unit</label>
-                <select class="form-select" name="polling_unit_id" id="pollingUnitSelect" required>
+                <select class="form-select" name="polling_unit_id" id="pollingUnitSelect" data-searchable-select data-searchable-placeholder="Type to search polling units" required>
                     <option value="">Select polling unit</option>
                     <?php foreach ($pollingUnits as $pollingUnit): ?>
                         <option

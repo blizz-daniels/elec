@@ -5,10 +5,18 @@ $lgas = $lgas ?? [];
 $wards = $wards ?? [];
 ?>
 
-<div class="mb-4">
-    <h1 class="h3 mb-1">Polling Units</h1>
-    <p class="text-muted mb-0">Create and manage polling units for result submissions.</p>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Polling Units</h1>
+        <p class="text-muted mb-0">Create and manage polling units for result submissions.</p>
+    </div>
+    <form method="post" action="<?= url('/admin/polling-units'); ?>" onsubmit="return confirm('Import polling units from the CSV file?');">
+        <?= csrf_field(); ?>
+        <input type="hidden" name="action" value="import_polling_units_csv">
+        <button class="btn btn-outline-primary" type="submit">Import CSV</button>
+    </form>
 </div>
+<p class="text-muted small mb-4">Uses <code>polliong unit.csv</code> from the project root and upserts districts, LGAs, wards, and polling units.</p>
 
 <div class="card p-4 mb-4">
     <h2 class="h5 mb-3">Add Polling Unit</h2>

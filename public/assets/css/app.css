@@ -245,6 +245,21 @@ a {
     max-width: 36rem;
 }
 
+.searchable-select {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.searchable-select__input {
+    border-radius: 12px;
+}
+
+.searchable-select__empty {
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding-left: 0.1rem;
+}
+
 .btn--ghost,
 .btn--accent {
     display: inline-flex;

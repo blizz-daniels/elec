@@ -72,28 +72,41 @@ $selectedLgaId = (int) ($selectedLgaId ?? 0);
                         </td>
                         <td><span class="badge text-bg-secondary"><?= htmlspecialchars((string) ($member['status'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span></td>
                         <td class="text-end">
+                            <?php
+                                $memberStatus = (string) ($member['status'] ?? '');
+                                $isMarshal = (bool) ($member['is_marshal'] ?? false);
+                                $isApproved = in_array($memberStatus, ['approved', 'active'], true);
+                            ?>
                             <div class="d-grid gap-2 justify-content-end">
-                                <form method="post" action="<?= url('/admin/members'); ?>" class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
-                                    <?= csrf_field(); ?>
-                                    <input type="hidden" name="action" value="promote_marshal">
-                                    <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
-                                    <select class="form-select form-select-sm" name="polling_unit_id" required style="min-width: 210px;">
-                                        <option value="">Select polling unit</option>
-                                        <?php foreach ($pollingUnits as $pollingUnit): ?>
-                                            <option value="<?= (int) $pollingUnit['id']; ?>" <?= (int) ($member['polling_unit_id'] ?? 0) === (int) $pollingUnit['id'] ? 'selected' : ''; ?>>
-                                                <?= htmlspecialchars((string) $pollingUnit['polling_name'], ENT_QUOTES, 'UTF-8'); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <button class="btn btn-sm btn-primary" type="submit">Promote Marshal</button>
-                                </form>
-                                <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
-                                    <form method="post" action="<?= url('/admin/members'); ?>">
+                                <?php if ($memberStatus === 'approved' && !$isMarshal): ?>
+                                    <form method="post" action="<?= url('/admin/members'); ?>" class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
                                         <?= csrf_field(); ?>
-                                        <input type="hidden" name="action" value="approve">
+                                        <input type="hidden" name="action" value="promote_marshal">
                                         <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
-                                        <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                        <select class="form-select form-select-sm" name="polling_unit_id" data-searchable-select data-searchable-placeholder="Type to search polling units" required style="min-width: 210px;">
+                                            <option value="">Select polling unit</option>
+                                            <?php foreach ($pollingUnits as $pollingUnit): ?>
+                                                <option value="<?= (int) $pollingUnit['id']; ?>" <?= (int) ($member['polling_unit_id'] ?? 0) === (int) $pollingUnit['id'] ? 'selected' : ''; ?>>
+                                                    <?= htmlspecialchars((string) $pollingUnit['polling_name'], ENT_QUOTES, 'UTF-8'); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <button class="btn btn-sm btn-primary" type="submit">Promote Marshal</button>
                                     </form>
+                                <?php elseif ($isMarshal): ?>
+                                    <div class="text-end small text-muted">Polling marshal assigned</div>
+                                <?php endif; ?>
+                                <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                    <?php if (!$isApproved): ?>
+                                        <form method="post" action="<?= url('/admin/members'); ?>">
+                                            <?= csrf_field(); ?>
+                                            <input type="hidden" name="action" value="approve">
+                                            <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
+                                            <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="btn btn-sm btn-outline-success disabled" aria-disabled="true">Approved</span>
+                                    <?php endif; ?>
                                     <form method="post" action="<?= url('/admin/members'); ?>">
                                         <?= csrf_field(); ?>
                                         <input type="hidden" name="action" value="reject">

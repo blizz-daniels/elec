@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Support\Auth;
+use App\Support\Config;
 use App\Support\Database;
 use App\Support\Request;
 use App\Support\Csrf;
@@ -24,7 +25,13 @@ final class AdminModuleController extends Controller
         $status = trim((string) $request->input('status', ''));
         $lgaId = (int) $request->input('lga_id', 0);
 
-        $sql = 'SELECT members.*, lgas.name AS lga_name, wards.name AS ward_name, polling_units.polling_name
+        $sql = 'SELECT members.*, lgas.name AS lga_name, wards.name AS ward_name, polling_units.polling_name,
+                       EXISTS(
+                           SELECT 1
+                           FROM users
+                           INNER JOIN polling_marshals ON polling_marshals.user_id = users.id
+                           WHERE users.email = members.email
+                       ) AS is_marshal
                 FROM members
                 LEFT JOIN lgas ON lgas.id = members.lga_id
                 LEFT JOIN wards ON wards.id = members.ward_id
@@ -197,7 +204,29 @@ final class AdminModuleController extends Controller
     public function profile(Request $request): void
     {
         Auth::requiresLogin();
-        $this->renderModule('Profile', 'User profile and security settings.');
+        $pdo = Database::pdo();
+        $currentUser = Auth::user();
+        $userId = (int) ($currentUser['id'] ?? 0);
+        $email = trim((string) ($currentUser['email'] ?? ''));
+
+        $stmt = $pdo->prepare(
+            'SELECT users.*, roles.name AS role_name, roles.slug AS role_slug
+             FROM users
+             INNER JOIN roles ON roles.id = users.role_id
+             WHERE users.id = :id OR users.email = :email
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'id' => $userId,
+            'email' => $email,
+        ]);
+
+        $user = $stmt->fetch() ?: $currentUser;
+
+        $this->view('admin/profile', [
+            'title' => 'Profile',
+            'user' => $user,
+        ]);
     }
 
     private function handleMemberPost(Request $request, \PDO $pdo): void
@@ -521,6 +550,19 @@ final class AdminModuleController extends Controller
                     flash('success', 'Polling unit deleted.');
                     break;
 
+                case 'import_polling_units_csv':
+                    $csvPath = Config::basePath('polliong unit.csv');
+                    if (!is_file($csvPath)) {
+                        throw new \RuntimeException('Polling unit CSV file was not found.');
+                    }
+
+                    $counts = $this->importPollingUnitsFromCsv($pdo, $csvPath);
+                    flash(
+                        'success',
+                        sprintf('Imported %d polling units from the CSV file.', $counts['polling_units'])
+                    );
+                    break;
+
                 default:
                     flash('error', 'Unsupported action.');
             }
@@ -529,6 +571,317 @@ final class AdminModuleController extends Controller
         }
 
         redirect('/admin/polling-units');
+    }
+
+    private function importPollingUnitsFromCsv(\PDO $pdo, string $csvPath): array
+    {
+        set_time_limit(0);
+
+        $handle = fopen($csvPath, 'rb');
+        if ($handle === false) {
+            throw new \RuntimeException('Unable to open the polling unit CSV file.');
+        }
+
+        $header = fgetcsv($handle);
+        if ($header === false) {
+            fclose($handle);
+            throw new \RuntimeException('The polling unit CSV file is empty.');
+        }
+
+        $header = array_map(static fn ($value): string => trim((string) $value), $header);
+        $rowCount = 0;
+
+        $pdo->beginTransaction();
+        try {
+            while (($row = fgetcsv($handle)) !== false) {
+                if ($row === [null] || $row === []) {
+                    continue;
+                }
+
+                $record = array_combine($header, $row);
+                if ($record === false) {
+                    continue;
+                }
+
+                $districtName = $this->normalizeDistrictName(trim((string) ($record['Senatorial District'] ?? '')));
+                $lgaName = $this->normalizeLgaName(trim((string) ($record['Local Government'] ?? '')));
+                $wardName = trim((string) ($record['Ward'] ?? ''));
+                $pollingName = trim((string) ($record['Polling Unit'] ?? ''));
+                $stateCode = trim((string) ($record['State Code'] ?? ''));
+                $lgaCode = trim((string) ($record['LGA Code'] ?? ''));
+                $wardCode = trim((string) ($record['Ward Code'] ?? ''));
+                $pollingCode = trim((string) ($record['Full Polling Unit Code'] ?? ''));
+
+                if ($districtName === '' || $lgaName === '' || $wardName === '' || $pollingName === '') {
+                    continue;
+                }
+
+                $districtId = $this->upsertDistrict($pdo, $districtName);
+                $lgaId = $this->upsertLga(
+                    $pdo,
+                    $districtId,
+                    $lgaName,
+                    $stateCode !== '' && $lgaCode !== '' ? $stateCode . '/' . $lgaCode : $this->slugify($lgaName)
+                );
+                $wardId = $this->upsertWard(
+                    $pdo,
+                    $lgaId,
+                    $wardName,
+                    $stateCode !== '' && $lgaCode !== '' && $wardCode !== ''
+                        ? $stateCode . '/' . $lgaCode . '/' . $wardCode
+                        : $this->slugify($lgaName . ' ' . $wardName)
+                );
+
+                $this->upsertPollingUnit(
+                    $pdo,
+                    $districtId,
+                    $lgaId,
+                    $wardId,
+                    $pollingCode !== '' ? $pollingCode : $stateCode . '/' . $lgaCode . '/' . $wardCode . '/' . $this->slugify($pollingName),
+                    $pollingName
+                );
+
+                $rowCount++;
+            }
+
+            $pdo->commit();
+            fclose($handle);
+
+            return ['polling_units' => $rowCount];
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
+            fclose($handle);
+            throw $e;
+        }
+    }
+
+    private function upsertDistrict(\PDO $pdo, string $name): int
+    {
+        $candidates = array_values(array_unique(array_filter([
+            $name,
+            $this->districtAliasName($name),
+        ])));
+
+        $districtId = $this->findRecordIdByNames($pdo, 'senatorial_districts', $candidates);
+        if ($districtId > 0) {
+            $stmt = $pdo->prepare('UPDATE senatorial_districts SET name = :name, slug = :slug, updated_at = NOW() WHERE id = :id');
+            $stmt->execute([
+                'name' => $name,
+                'slug' => $this->slugify($name),
+                'id' => $districtId,
+            ]);
+
+            return $districtId;
+        }
+
+        $stmt = $pdo->prepare('INSERT INTO senatorial_districts (name, slug) VALUES (:name, :slug)');
+        $stmt->execute([
+            'name' => $name,
+            'slug' => $this->slugify($name),
+        ]);
+
+        return (int) $pdo->lastInsertId();
+    }
+
+    private function upsertLga(\PDO $pdo, int $districtId, string $name, string $code): int
+    {
+        $candidates = array_values(array_unique(array_filter([
+            $name,
+            $this->lgaAliasName($name),
+        ])));
+
+        $lgaId = $this->findRecordIdByNames($pdo, 'lgas', $candidates);
+        if ($lgaId > 0) {
+            $stmt = $pdo->prepare(
+                'UPDATE lgas
+                 SET senatorial_district_id = :senatorial_district_id,
+                     name = :name,
+                     code = :code,
+                     updated_at = NOW()
+                 WHERE id = :id'
+            );
+            $stmt->execute([
+                'senatorial_district_id' => $districtId,
+                'name' => $name,
+                'code' => $code,
+                'id' => $lgaId,
+            ]);
+
+            return $lgaId;
+        }
+
+        $stmt = $pdo->prepare('INSERT INTO lgas (senatorial_district_id, name, code) VALUES (:senatorial_district_id, :name, :code)');
+        $stmt->execute([
+            'senatorial_district_id' => $districtId,
+            'name' => $name,
+            'code' => $code,
+        ]);
+
+        return (int) $pdo->lastInsertId();
+    }
+
+    private function upsertWard(\PDO $pdo, int $lgaId, string $name, string $code): int
+    {
+        $stmt = $pdo->prepare('SELECT id FROM wards WHERE code = :code LIMIT 1');
+        $stmt->execute(['code' => $code]);
+        $wardId = (int) ($stmt->fetchColumn() ?: 0);
+
+        if ($wardId > 0) {
+            $update = $pdo->prepare(
+                'UPDATE wards
+                 SET lga_id = :lga_id,
+                     name = :name,
+                     updated_at = NOW()
+                 WHERE id = :id'
+            );
+            $update->execute([
+                'lga_id' => $lgaId,
+                'name' => $name,
+                'id' => $wardId,
+            ]);
+
+            return $wardId;
+        }
+
+        $insert = $pdo->prepare('INSERT INTO wards (lga_id, name, code) VALUES (:lga_id, :name, :code)');
+        $insert->execute([
+            'lga_id' => $lgaId,
+            'name' => $name,
+            'code' => $code,
+        ]);
+
+        return (int) $pdo->lastInsertId();
+    }
+
+    private function upsertPollingUnit(\PDO $pdo, int $districtId, int $lgaId, int $wardId, string $code, string $name): int
+    {
+        $stmt = $pdo->prepare('SELECT id FROM polling_units WHERE polling_code = :polling_code LIMIT 1');
+        $stmt->execute(['polling_code' => $code]);
+        $pollingUnitId = (int) ($stmt->fetchColumn() ?: 0);
+
+        if ($pollingUnitId > 0) {
+            $update = $pdo->prepare(
+                'UPDATE polling_units
+                 SET senatorial_district_id = :senatorial_district_id,
+                     lga_id = :lga_id,
+                     ward_id = :ward_id,
+                     polling_name = :polling_name,
+                     updated_at = NOW()
+                 WHERE id = :id'
+            );
+            $update->execute([
+                'senatorial_district_id' => $districtId,
+                'lga_id' => $lgaId,
+                'ward_id' => $wardId,
+                'polling_name' => $name,
+                'id' => $pollingUnitId,
+            ]);
+
+            return $pollingUnitId;
+        }
+
+        $insert = $pdo->prepare(
+            'INSERT INTO polling_units (senatorial_district_id, lga_id, ward_id, polling_code, polling_name, latitude, longitude, gps_address)
+             VALUES (:senatorial_district_id, :lga_id, :ward_id, :polling_code, :polling_name, NULL, NULL, NULL)'
+        );
+        $insert->execute([
+            'senatorial_district_id' => $districtId,
+            'lga_id' => $lgaId,
+            'ward_id' => $wardId,
+            'polling_code' => $code,
+            'polling_name' => $name,
+        ]);
+
+        return (int) $pdo->lastInsertId();
+    }
+
+    private function findRecordIdByNames(\PDO $pdo, string $table, array $names): int
+    {
+        $names = array_values(array_unique(array_filter(array_map('trim', $names), static fn (string $value): bool => $value !== '')));
+        if ($names === []) {
+            return 0;
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($names as $index => $candidate) {
+            $key = 'candidate_' . $index;
+            $placeholders[] = ':' . $key;
+            $params[$key] = $candidate;
+        }
+
+        $stmt = $pdo->prepare('SELECT id FROM ' . $table . ' WHERE name IN (' . implode(', ', $placeholders) . ') LIMIT 1');
+        $stmt->execute($params);
+
+        return (int) ($stmt->fetchColumn() ?: 0);
+    }
+
+    private function normalizeDistrictName(string $name): string
+    {
+        $aliases = [
+            'abeokuta senatorial district' => 'Ogun Central',
+            'ijebu senatorial district' => 'Ogun East',
+            'remo senatorial district' => 'Ogun West',
+        ];
+
+        $key = strtolower(preg_replace('/\s+/', ' ', trim($name)) ?: '');
+
+        return $aliases[$key] ?? $name;
+    }
+
+    private function districtAliasName(string $name): string
+    {
+        $aliases = [
+            'Ogun Central' => 'Abeokuta Senatorial District',
+            'Ogun East' => 'Ijebu Senatorial District',
+            'Ogun West' => 'Remo Senatorial District',
+        ];
+
+        return $aliases[$name] ?? $name;
+    }
+
+    private function normalizeLgaName(string $name): string
+    {
+        $aliases = [
+            'ado odo-ota' => 'Ado-Odo/Ota',
+            'ado odo ota' => 'Ado-Odo/Ota',
+            'ota' => 'Ado-Odo/Ota',
+            'ado-odo/ota' => 'Ado-Odo/Ota',
+            'ado-odo ota' => 'Ado-Odo/Ota',
+            'egbado north' => 'Yewa North',
+            'egbado south' => 'Yewa South',
+            'imeko/afon' => 'Imeko Afon',
+            'obafemi/owode' => 'Obafemi Owode',
+            'ogun water side' => 'Ogun Waterside',
+            'ogun waterside' => 'Ogun Waterside',
+            'ijebu north east' => 'Ijebu North-East',
+            'ijebu north-east' => 'Ijebu North-East',
+            'ijebu ode' => 'Ijebu-Ode',
+        ];
+
+        $key = strtolower(preg_replace('/\s+/', ' ', trim($name)) ?: '');
+
+        return $aliases[$key] ?? $name;
+    }
+
+    private function lgaAliasName(string $name): string
+    {
+        $aliases = [
+            'Ado-Odo/Ota' => 'Ado Odo-Ota',
+            'Ota' => 'Ado-Odo/Ota',
+            'Yewa North' => 'Egbado North',
+            'Yewa South' => 'Egbado South',
+            'Imeko Afon' => 'Imeko/Afon',
+            'Obafemi Owode' => 'Obafemi/Owode',
+            'Ogun Waterside' => 'Ogun Water Side',
+            'Ijebu North-East' => 'Ijebu North East',
+            'Ijebu-Ode' => 'Ijebu Ode',
+        ];
+
+        return $aliases[$name] ?? $name;
     }
 
     private function renderModule(string $title, string $description): void
