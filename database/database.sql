@@ -1,6 +1,3 @@
-CREATE DATABASE IF NOT EXISTS ogun_political_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE ogun_political_test;
-
 CREATE TABLE roles (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
@@ -94,10 +91,12 @@ CREATE TABLE members (
     phone VARCHAR(30) NOT NULL,
     email VARCHAR(190) NOT NULL UNIQUE,
     state_of_origin VARCHAR(120) NOT NULL,
-    state_of_residence VARCHAR(120) NOT NULL DEFAULT 'Ogun State',
+    senatorial_district_id BIGINT UNSIGNED NULL,
+    state_of_residence VARCHAR(120) NOT NULL DEFAULT 'Ogun Resident',
     date_of_birth DATE NULL,
     gender ENUM('male','female','other') NULL,
     vin VARCHAR(50) NULL,
+    nin VARCHAR(50) NULL,
     occupation VARCHAR(120) NULL,
     residential_address TEXT NULL,
     lga_id BIGINT UNSIGNED NULL,
@@ -109,6 +108,7 @@ CREATE TABLE members (
     qr_code_path VARCHAR(255) NULL,
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_members_senatorial FOREIGN KEY (senatorial_district_id) REFERENCES senatorial_districts(id) ON DELETE SET NULL,
     CONSTRAINT fk_members_lga FOREIGN KEY (lga_id) REFERENCES lgas(id) ON DELETE SET NULL,
     CONSTRAINT fk_members_ward FOREIGN KEY (ward_id) REFERENCES wards(id) ON DELETE SET NULL,
     CONSTRAINT fk_members_pu FOREIGN KEY (polling_unit_id) REFERENCES polling_units(id) ON DELETE SET NULL

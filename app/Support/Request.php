@@ -24,6 +24,9 @@ final class Request
             $uri = substr($uri, strlen($base));
         }
 
+        $uri = preg_replace('#^/index\.php#', '', $uri) ?: $uri;
+        $uri = preg_replace('#/(?:index\.php)?$#', '/', $uri) ?: $uri;
+
         return $uri === '' ? '/' : $uri;
     }
 

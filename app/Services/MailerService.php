@@ -20,7 +20,7 @@ final class MailerService
         $mail->Password = (string) Config::get('MAIL_PASSWORD', '');
         $mail->SMTPSecure = (string) Config::get('MAIL_ENCRYPTION', 'tls');
         $mail->Port = (int) Config::get('MAIL_PORT', 587);
-        $mail->setFrom((string) Config::get('MAIL_FROM_ADDRESS', 'no-reply@example.com'), (string) Config::get('MAIL_FROM_NAME', 'Ogun Political System'));
+        $mail->setFrom((string) Config::get('MAIL_FROM_ADDRESS', 'no-reply@example.com'), (string) Config::get('MAIL_FROM_NAME', 'Yayi Youth Vanguard'));
         $mail->addAddress($to);
         $mail->isHTML(true);
         $mail->Subject = $subject;

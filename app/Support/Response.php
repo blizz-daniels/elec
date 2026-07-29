@@ -21,6 +21,12 @@ final class Response
 
     public static function redirect(string $path): void
     {
+        if ($path !== '' && !preg_match('#^[a-z][a-z0-9+\-.]*://#i', $path) && !str_starts_with($path, '//')) {
+            if (function_exists('url')) {
+                $path = url($path);
+            }
+        }
+
         header('Location: ' . $path);
         exit;
     }

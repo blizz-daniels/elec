@@ -1,5 +1,3 @@
-USE ogun_political_test;
-
 INSERT IGNORE INTO roles (id, name, slug) VALUES
 (1, 'Super Admin', 'super-admin'),
 (2, 'State Executive', 'state-executive'),
@@ -46,9 +44,9 @@ INSERT IGNORE INTO users (id, role_id, full_name, email, phone, password, status
 (6, 6, 'Polling Marshal Demo', 'marshal@ogun.test', '08010000006', '$2y$10$YmKyLkMBQwlT8ZMsSG5qqeqQvUvbYJsoeSdTSySI0wdfMjqoVdXbS', 'active'),
 (7, 7, 'Registered Member Demo', 'member@ogun.test', '08010000007', '$2y$10$YmKyLkMBQwlT8ZMsSG5qqeqQvUvbYJsoeSdTSySI0wdfMjqoVdXbS', 'active');
 
-INSERT IGNORE INTO members (id, membership_number, surname, first_name, other_name, phone, email, state_of_origin, state_of_residence, date_of_birth, gender, vin, occupation, residential_address, lga_id, ward_id, polling_unit_id, passport_path, password, status, qr_code_path) VALUES
-(1, 'OGN000001', 'Demo', 'Registered', 'Member', '08010000007', 'member@ogun.test', 'Ogun State', 'Ogun State', '1990-01-01', 'other', 'VIN-TEST-001', 'Administrator', 'Abeokuta, Ogun State', 1, 1, 1, NULL, '$2y$10$YmKyLkMBQwlT8ZMsSG5qqeqQvUvbYJsoeSdTSySI0wdfMjqoVdXbS', 'approved', NULL);
+INSERT IGNORE INTO members (id, membership_number, surname, first_name, other_name, phone, email, state_of_origin, senatorial_district_id, state_of_residence, date_of_birth, gender, vin, nin, occupation, residential_address, lga_id, ward_id, polling_unit_id, passport_path, password, status, qr_code_path) VALUES
+(1, 'OGN000001', 'Demo', 'Registered', 'Member', '08010000007', 'member@ogun.test', 'Ogun State', 1, 'Ogun Resident', '1990-01-01', 'other', 'VIN-TEST-001', 'NIN-TEST-001', 'Administrator', 'Abeokuta, Ogun State', 1, 1, 1, NULL, '$2y$10$YmKyLkMBQwlT8ZMsSG5qqeqQvUvbYJsoeSdTSySI0wdfMjqoVdXbS', 'approved', NULL);
 
 INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
-('site_name', 'Ogun State Political Membership & Election Monitoring System'),
+('site_name', 'Yayi Youth Vanguard Membership & Polling Unit Marshal Registration'),
 ('maintenance_mode', '0');

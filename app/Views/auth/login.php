@@ -1,7 +1,7 @@
 <section class="auth-hero">
     <div class="auth-hero__panel">
         <div class="hero-badge mb-3">Secure portal access</div>
-        <h1 class="hero-title auth-hero__title">Welcome back to the Ogun State political portal.</h1>
+        <h1 class="hero-title auth-hero__title">Welcome back to Yayi Youth Vanguard.</h1>
         <p class="hero-text auth-hero__text">
             Sign in to manage members, monitor elections, approve submissions, and continue your dashboard workflow.
         </p>

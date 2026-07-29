@@ -1,6 +1,6 @@
 {
     "name": "ogun-state/political-membership-election-monitoring",
-    "description": "Ogun State Political Membership and Election Monitoring System",
+    "description": "Yayi Youth Vanguard membership and marshal registration portal",
     "type": "project",
     "license": "proprietary",
     "require": {

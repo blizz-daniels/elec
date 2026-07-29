@@ -1,6 +1,6 @@
-# Ogun State Political Membership & Election Monitoring System
+# Yayi Youth Vanguard Membership & Polling Unit Marshal Registration
 
-PHP 8.3 + MySQL 8 MVC starter for membership registration, executive management, polling unit administration, election monitoring, and live result reporting.
+PHP 8.3 + MySQL 8 MVC starter for membership registration, executive management, polling unit administration, marshal coordination, and records reporting.
 
 ## Features
 

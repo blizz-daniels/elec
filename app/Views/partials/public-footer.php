@@ -1,13 +1,13 @@
 <section class="footer-map">
     <div class="footer-map__box">
-        <h2>OMO OGUN - ISEYA</h2>
+        <h2>Together We Deliver</h2>
     </div>
 </section>
 <footer class="site-footer">
     <div class="site-footer__inner">
         <div>
-            <div class="site-footer__title">Ogun Political</div>
-            <p>Membership registration, executive administration, election monitoring, and results verification for Ogun State.</p>
+            <div class="site-footer__title">Yayi Youth Vanguard</div>
+            <p>Membership registration, executive administration, marshal coordination, and records management.</p>
         </div>
         <div class="site-footer__links">
             <div class="site-footer__title" style="font-size:1.1rem;">Link</div>
@@ -22,5 +22,5 @@
             <p>info@example.com</p>
         </div>
     </div>
-    <div class="site-footer__bottom">Copyright 2026 Ogun Political System</div>
+    <div class="site-footer__bottom">Copyright 2026 Yayi Youth Vanguard</div>
 </footer>

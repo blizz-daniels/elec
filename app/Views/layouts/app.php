@@ -5,9 +5,26 @@ declare(strict_types=1);
 use App\Support\Auth;
 use App\Support\Config;
 
-$title = $title ?? app('APP_NAME', 'Ogun Political System');
+$title = $title ?? app('APP_NAME', 'Yayi Youth Vanguard');
 $currentUser = Auth::user();
+$currentRole = Auth::role();
 $isAuthView = str_contains($template, 'auth/');
+$sidebarItems = [
+    ['label' => 'Dashboard', 'href' => url('/dashboard'), 'roles' => null],
+    ['label' => 'Members', 'href' => url('/admin/members'), 'roles' => ['super-admin', 'state-executive', 'lga-executive', 'ward-executive']],
+    ['label' => 'Executives', 'href' => url('/admin/executives'), 'roles' => ['super-admin', 'state-executive']],
+    ['label' => 'Geography', 'href' => url('/admin/geography'), 'roles' => ['super-admin', 'state-executive']],
+    ['label' => 'Polling Units', 'href' => url('/admin/polling-units'), 'roles' => ['super-admin', 'state-executive', 'lga-executive']],
+    ['label' => 'Marshals', 'href' => url('/admin/marshals'), 'roles' => ['super-admin', 'state-executive', 'lga-executive']],
+    ['label' => 'Candidates', 'href' => url('/admin/candidates'), 'roles' => ['super-admin', 'state-executive']],
+    ['label' => 'Elections', 'href' => url('/elections'), 'roles' => null],
+    ['label' => 'Results', 'href' => url('/results'), 'roles' => null],
+    ['label' => 'Reports', 'href' => url('/reports'), 'roles' => ['super-admin', 'state-executive', 'lga-executive', 'ward-executive']],
+    ['label' => 'Notifications', 'href' => url('/notifications'), 'roles' => null],
+    ['label' => 'Audit Logs', 'href' => url('/admin/audit-logs'), 'roles' => ['super-admin']],
+    ['label' => 'Profile', 'href' => url('/profile'), 'roles' => null],
+    ['label' => 'Settings', 'href' => url('/settings'), 'roles' => ['super-admin', 'state-executive']],
+];
 ?>
 <!doctype html>
 <html lang="en">
@@ -20,38 +37,100 @@ $isAuthView = str_contains($template, 'auth/');
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-    <link href="<?= url('assets/css/app.css'); ?>" rel="stylesheet">
+    <link href="<?= url('public/assets/css/app.css'); ?>" rel="stylesheet">
 </head>
 <body class="app-shell app-theme">
 <?php if (!$isAuthView): ?>
     <header class="site-header">
         <div class="container-fluid site-header__inner">
             <a class="brand-mark" href="<?= url('/'); ?>">
-                <span class="brand-mark__icon">OG</span>
+                <span class="brand-mark__icon brand-mark__icon--logos" aria-hidden="true">
+                    <img
+                        class="brand-mark__logo-image"
+                        src="<?= htmlspecialchars(url('public/assets/' . rawurlencode('WhatsApp Image 2026-07-23 at 1.17.59 PM.jpeg')), ENT_QUOTES, 'UTF-8'); ?>"
+                        alt=""
+                    >
+                    <img
+                        class="brand-mark__logo-image brand-mark__logo-image--secondary"
+                        src="<?= htmlspecialchars(url('public/assets/' . rawurlencode('WhatsApp Image 2026-07-23 at 1.20.54 PM.jpeg')), ENT_QUOTES, 'UTF-8'); ?>"
+                        alt=""
+                    >
+                </span>
                 <span class="brand-mark__text">
-                    <strong><?= htmlspecialchars((string) app('APP_NAME', 'Ogun Political System'), ENT_QUOTES, 'UTF-8'); ?></strong>
-                    <small>Membership and election monitoring</small>
+                    <strong><?= htmlspecialchars((string) app('APP_NAME', 'Yayi Youth Vanguard'), ENT_QUOTES, 'UTF-8'); ?></strong>
+                    <small>Membership and executives registration portal</small>
                 </span>
             </a>
+            <button
+                class="site-menu-toggle btn btn--ghost d-lg-none"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mobileSiteMenu"
+                aria-controls="mobileSiteMenu"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <nav class="site-nav d-none d-lg-flex">
-                <a class="site-nav__link" href="<?= url('/#about-platform'); ?>">About</a>
+                <?php if (!$currentUser): ?>
+                    <a class="site-nav__link" href="<?= url('/#about-platform'); ?>">About</a>
+                <?php endif; ?>
                 <?php if ($currentUser): ?>
                     <a class="site-nav__link" href="<?= url('/member/dashboard'); ?>">Member Area</a>
                     <a class="site-nav__link" href="<?= url('/elections'); ?>">Elections</a>
                     <a class="site-nav__link" href="<?= url('/results'); ?>">Results</a>
                 <?php endif; ?>
             </nav>
-            <div class="site-actions">
+            <div class="site-actions d-none d-lg-flex">
                 <?php if ($currentUser): ?>
                     <a class="btn btn--ghost" href="<?= url('/dashboard'); ?>">Dashboard</a>
                     <form method="post" action="<?= url('/logout'); ?>" class="d-inline">
                         <?= csrf_field(); ?>
-                        <button class="btn btn--accent" type="submit">Logout</button>
+                    <button class="btn btn--accent" type="submit">Logout</button>
                     </form>
                 <?php else: ?>
                     <a class="btn btn--ghost" href="<?= url('/login'); ?>">Login</a>
                     <a class="btn btn--accent" href="<?= url('/register'); ?>">Register</a>
                 <?php endif; ?>
+            </div>
+        </div>
+        <div class="collapse d-lg-none site-mobile-menu" id="mobileSiteMenu">
+            <div class="site-mobile-menu__inner">
+                <nav class="site-mobile-menu__nav">
+                    <?php if (!$currentUser): ?>
+                        <a href="<?= url('/#about-platform'); ?>">About</a>
+                    <?php endif; ?>
+                    <?php if ($currentUser): ?>
+                        <a href="<?= url('/member/dashboard'); ?>">Member Area</a>
+                        <a href="<?= url('/elections'); ?>">Elections</a>
+                        <a href="<?= url('/results'); ?>">Results</a>
+                    <?php endif; ?>
+                </nav>
+                <?php if ($currentUser): ?>
+                    <div class="site-mobile-menu__section">
+                        <div class="site-mobile-menu__section-title">Operations Menu</div>
+                        <div class="site-mobile-menu__operation-links">
+                            <?php foreach ($sidebarItems as $item): ?>
+                                <?php if ($item['roles'] === null || in_array($currentRole, $item['roles'], true)): ?>
+                                    <a href="<?= $item['href']; ?>"><?= htmlspecialchars((string) $item['label'], ENT_QUOTES, 'UTF-8'); ?></a>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <div class="site-mobile-menu__actions">
+                    <?php if ($currentUser): ?>
+                        <a class="btn btn--ghost" href="<?= url('/dashboard'); ?>">Dashboard</a>
+                        <form method="post" action="<?= url('/logout'); ?>" class="d-grid">
+                            <?= csrf_field(); ?>
+                            <button class="btn btn--accent" type="submit">Logout</button>
+                        </form>
+                    <?php else: ?>
+                        <a class="btn btn--ghost" href="<?= url('/login'); ?>">Login</a>
+                        <a class="btn btn--accent" href="<?= url('/register'); ?>">Register</a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </header>
@@ -70,23 +149,14 @@ $isAuthView = str_contains($template, 'auth/');
             <aside class="dashboard-sidebar">
                 <div class="dashboard-sidebar__head">
                     <div class="dashboard-sidebar__eyebrow">Portal</div>
-                    <div class="dashboard-sidebar__title">Management Menu</div>
+                    <div class="dashboard-sidebar__title">Operations Menu</div>
                 </div>
                 <div class="dashboard-sidebar__links">
-                    <a href="<?= url('/dashboard'); ?>">Dashboard</a>
-                    <a href="<?= url('/admin/members'); ?>">Members</a>
-                    <a href="<?= url('/admin/executives'); ?>">Executives</a>
-                    <a href="<?= url('/admin/geography'); ?>">Geography</a>
-                    <a href="<?= url('/admin/polling-units'); ?>">Polling Units</a>
-                    <a href="<?= url('/admin/marshals'); ?>">Marshals</a>
-                    <a href="<?= url('/admin/candidates'); ?>">Candidates</a>
-                    <a href="<?= url('/elections'); ?>">Elections</a>
-                    <a href="<?= url('/results'); ?>">Results</a>
-                    <a href="<?= url('/reports'); ?>">Reports</a>
-                    <a href="<?= url('/notifications'); ?>">Notifications</a>
-                    <a href="<?= url('/admin/audit-logs'); ?>">Audit Logs</a>
-                    <a href="<?= url('/profile'); ?>">Profile</a>
-                    <a href="<?= url('/settings'); ?>">Settings</a>
+                    <?php foreach ($sidebarItems as $item): ?>
+                        <?php if ($item['roles'] === null || in_array($currentRole, $item['roles'], true)): ?>
+                            <a href="<?= $item['href']; ?>"><?= htmlspecialchars((string) $item['label'], ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
                 </div>
             </aside>
             <section class="dashboard-content">
@@ -102,6 +172,6 @@ $isAuthView = str_contains($template, 'auth/');
 <?php endif; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="<?= url('assets/js/app.js'); ?>"></script>
+<script src="<?= url('public/assets/js/app.js'); ?>"></script>
 </body>
 </html>

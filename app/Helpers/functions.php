@@ -18,7 +18,17 @@ if (!function_exists('url')) {
     function url(string $path = ''): string
     {
         $base = rtrim((string) Config::get('APP_URL', ''), '/');
-        return $base . '/' . ltrim($path, '/');
+        $path = ltrim($path, '/');
+
+        if ($path === '' || $path === '#') {
+            return $base . '/index.php';
+        }
+
+        if (str_starts_with($path, 'assets/') || str_starts_with($path, 'public/assets/') || str_starts_with($path, 'uploads/')) {
+            return $base . '/' . $path;
+        }
+
+        return $base . '/index.php/' . $path;
     }
 }
 

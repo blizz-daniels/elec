@@ -33,7 +33,7 @@ final class HomeController extends Controller
 
     public function electionMonitoring(Request $request): void
     {
-        $this->view('home/election-monitoring', ['title' => 'Election Monitoring']);
+        $this->view('home/election-monitoring', ['title' => 'Marshal Monitoring']);
     }
 
     public function news(Request $request): void

@@ -50,6 +50,7 @@ final class AdminModuleController extends Controller
             'title' => 'Members',
             'members' => $stmt->fetchAll(),
             'lgas' => $pdo->query('SELECT id, name FROM lgas ORDER BY name')->fetchAll(),
+            'pollingUnits' => $pdo->query('SELECT id, polling_name, ward_id FROM polling_units ORDER BY polling_name')->fetchAll(),
             'status' => $status,
             'selectedLgaId' => $lgaId,
         ]);
@@ -214,6 +215,20 @@ final class AdminModuleController extends Controller
         }
 
         try {
+            if ($action === 'promote_marshal') {
+                $pollingUnitId = (int) $request->input('polling_unit_id', 0);
+                if ($pollingUnitId <= 0) {
+                    throw new \RuntimeException('Select a polling unit before promoting the member.');
+                }
+
+                $pdo->beginTransaction();
+                $this->promoteMemberToMarshal($pdo, $memberId, $pollingUnitId);
+                $pdo->commit();
+
+                flash('success', 'Member promoted to polling marshal.');
+                redirect('/admin/members');
+            }
+
             if ($action === 'delete') {
                 $stmt = $pdo->prepare('DELETE FROM members WHERE id = :id');
                 $stmt->execute(['id' => $memberId]);
@@ -230,10 +245,143 @@ final class AdminModuleController extends Controller
 
             flash('success', 'Member updated.');
         } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             flash('error', 'Could not update the member record.');
         }
 
         redirect('/admin/members');
+    }
+
+    private function promoteMemberToMarshal(\PDO $pdo, int $memberId, int $pollingUnitId): void
+    {
+        $memberStmt = $pdo->prepare('SELECT * FROM members WHERE id = :id LIMIT 1');
+        $memberStmt->execute(['id' => $memberId]);
+        $member = $memberStmt->fetch();
+        if (!$member) {
+            throw new \RuntimeException('Member record not found.');
+        }
+
+        $pollingUnitStmt = $pdo->prepare('SELECT * FROM polling_units WHERE id = :id LIMIT 1');
+        $pollingUnitStmt->execute(['id' => $pollingUnitId]);
+        $pollingUnit = $pollingUnitStmt->fetch();
+        if (!$pollingUnit) {
+            throw new \RuntimeException('Polling unit not found.');
+        }
+
+        $roleId = $this->roleId($pdo, 'polling-marshal');
+        $fullName = trim((string) ($member['surname'] ?? '') . ' ' . (string) ($member['first_name'] ?? '') . ' ' . (string) ($member['other_name'] ?? ''));
+        $email = trim((string) ($member['email'] ?? ''));
+        $phone = trim((string) ($member['phone'] ?? ''));
+        $password = (string) ($member['password'] ?? '');
+        $wardId = (int) ($member['ward_id'] ?? 0);
+        if ($wardId <= 0) {
+            $wardId = (int) ($pollingUnit['ward_id'] ?? 0);
+        }
+
+        if ($fullName === '' || $email === '' || $password === '') {
+            throw new \RuntimeException('Member data is incomplete.');
+        }
+        if ($wardId <= 0) {
+            throw new \RuntimeException('Unable to determine the ward for this marshal.');
+        }
+
+        $userStmt = $pdo->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
+        $userStmt->execute(['email' => $email]);
+        $userId = (int) ($userStmt->fetchColumn() ?: 0);
+
+        if ($userId > 0) {
+            $updateUser = $pdo->prepare(
+                'UPDATE users
+                 SET role_id = :role_id,
+                     full_name = :full_name,
+                     phone = :phone,
+                     password = :password,
+                     status = :status,
+                     updated_at = NOW()
+                 WHERE id = :id'
+            );
+            $updateUser->execute([
+                'role_id' => $roleId,
+                'full_name' => $fullName,
+                'phone' => $phone !== '' ? $phone : null,
+                'password' => $password,
+                'status' => 'active',
+                'id' => $userId,
+            ]);
+        } else {
+            $insertUser = $pdo->prepare(
+                'INSERT INTO users (role_id, full_name, email, phone, password, status)
+                 VALUES (:role_id, :full_name, :email, :phone, :password, :status)'
+            );
+            $insertUser->execute([
+                'role_id' => $roleId,
+                'full_name' => $fullName,
+                'email' => $email,
+                'phone' => $phone !== '' ? $phone : null,
+                'password' => $password,
+                'status' => 'active',
+            ]);
+            $userId = (int) $pdo->lastInsertId();
+        }
+
+        $marshalStmt = $pdo->prepare('SELECT id FROM polling_marshals WHERE user_id = :user_id LIMIT 1');
+        $marshalStmt->execute(['user_id' => $userId]);
+        $marshalId = (int) ($marshalStmt->fetchColumn() ?: 0);
+
+        if ($marshalId > 0) {
+            $updateMarshal = $pdo->prepare(
+                'UPDATE polling_marshals
+                 SET polling_unit_id = :polling_unit_id,
+                     ward_id = :ward_id,
+                     phone = :phone,
+                     email = :email,
+                     status = :status,
+                     updated_at = NOW()
+                 WHERE id = :id'
+            );
+            $updateMarshal->execute([
+                'polling_unit_id' => $pollingUnitId,
+                'ward_id' => $wardId,
+                'phone' => $phone !== '' ? $phone : null,
+                'email' => $email,
+                'status' => 'active',
+                'id' => $marshalId,
+            ]);
+        } else {
+            $insertMarshal = $pdo->prepare(
+                'INSERT INTO polling_marshals (user_id, polling_unit_id, ward_id, phone, email, status)
+                 VALUES (:user_id, :polling_unit_id, :ward_id, :phone, :email, :status)'
+            );
+            $insertMarshal->execute([
+                'user_id' => $userId,
+                'polling_unit_id' => $pollingUnitId,
+                'ward_id' => $wardId,
+                'phone' => $phone !== '' ? $phone : null,
+                'email' => $email,
+                'status' => 'active',
+            ]);
+        }
+
+        $updateMember = $pdo->prepare('UPDATE members SET status = :status, updated_at = NOW() WHERE id = :id');
+        $updateMember->execute([
+            'status' => 'approved',
+            'id' => $memberId,
+        ]);
+    }
+
+    private function roleId(\PDO $pdo, string $slug): int
+    {
+        $stmt = $pdo->prepare('SELECT id FROM roles WHERE slug = :slug LIMIT 1');
+        $stmt->execute(['slug' => $slug]);
+        $roleId = (int) ($stmt->fetchColumn() ?: 0);
+
+        if ($roleId <= 0) {
+            throw new \RuntimeException('Required role is missing: ' . $slug);
+        }
+
+        return $roleId;
     }
 
     private function handleGeographyPost(Request $request, \PDO $pdo): void

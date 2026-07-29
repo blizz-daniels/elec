@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 return [
-    'APP_NAME' => 'Ogun State Political Membership & Election Monitoring System',
+    'APP_NAME' => 'Yayi Youth Vanguard Membership & Polling Unit Marshal Registration',
     'APP_ENV' => 'local',
     'APP_DEBUG' => true,
-    'APP_URL' => 'https://your-domain.com',
+    'APP_URL' => 'https://vangaurdogun.freedev.app',
 
     'DB_HOST' => 'sql213.infinityfree.com',
     'DB_PORT' => '3306',
@@ -21,10 +21,10 @@ return [
     'MAIL_PASSWORD' => '',
     'MAIL_ENCRYPTION' => 'tls',
     'MAIL_FROM_ADDRESS' => 'no-reply@your-domain.com',
-    'MAIL_FROM_NAME' => 'Ogun Political System',
+    'MAIL_FROM_NAME' => 'Yayi Youth Vanguard',
 
     'SESSION_NAME' => 'ogun_session',
-    'UPLOAD_MAX_KB' => 100,
+    'UPLOAD_MAX_KB' => 5120,
     'DEFAULT_STATE' => 'Ogun State',
     'DEFAULT_COUNTRY' => 'Nigeria',
 ];

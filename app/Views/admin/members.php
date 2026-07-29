@@ -1,6 +1,7 @@
 <?php
 $members = $members ?? [];
 $lgas = $lgas ?? [];
+$pollingUnits = $pollingUnits ?? [];
 $status = (string) ($status ?? '');
 $selectedLgaId = (int) ($selectedLgaId ?? 0);
 ?>
@@ -71,25 +72,41 @@ $selectedLgaId = (int) ($selectedLgaId ?? 0);
                         </td>
                         <td><span class="badge text-bg-secondary"><?= htmlspecialchars((string) ($member['status'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span></td>
                         <td class="text-end">
-                            <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
-                                <form method="post" action="<?= url('/admin/members'); ?>">
+                            <div class="d-grid gap-2 justify-content-end">
+                                <form method="post" action="<?= url('/admin/members'); ?>" class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
                                     <?= csrf_field(); ?>
-                                    <input type="hidden" name="action" value="approve">
+                                    <input type="hidden" name="action" value="promote_marshal">
                                     <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
-                                    <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                    <select class="form-select form-select-sm" name="polling_unit_id" required style="min-width: 210px;">
+                                        <option value="">Select polling unit</option>
+                                        <?php foreach ($pollingUnits as $pollingUnit): ?>
+                                            <option value="<?= (int) $pollingUnit['id']; ?>" <?= (int) ($member['polling_unit_id'] ?? 0) === (int) $pollingUnit['id'] ? 'selected' : ''; ?>>
+                                                <?= htmlspecialchars((string) $pollingUnit['polling_name'], ENT_QUOTES, 'UTF-8'); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary" type="submit">Promote Marshal</button>
                                 </form>
-                                <form method="post" action="<?= url('/admin/members'); ?>">
-                                    <?= csrf_field(); ?>
-                                    <input type="hidden" name="action" value="reject">
-                                    <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
-                                    <button class="btn btn-sm btn-warning" type="submit">Reject</button>
-                                </form>
-                                <form method="post" action="<?= url('/admin/members'); ?>" onsubmit="return confirm('Delete this member?');">
-                                    <?= csrf_field(); ?>
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
-                                </form>
+                                <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                    <form method="post" action="<?= url('/admin/members'); ?>">
+                                        <?= csrf_field(); ?>
+                                        <input type="hidden" name="action" value="approve">
+                                        <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
+                                        <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                    </form>
+                                    <form method="post" action="<?= url('/admin/members'); ?>">
+                                        <?= csrf_field(); ?>
+                                        <input type="hidden" name="action" value="reject">
+                                        <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
+                                        <button class="btn btn-sm btn-warning" type="submit">Reject</button>
+                                    </form>
+                                    <form method="post" action="<?= url('/admin/members'); ?>" onsubmit="return confirm('Delete this member?');">
+                                        <?= csrf_field(); ?>
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="member_id" value="<?= (int) $member['id']; ?>">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    </form>
+                                </div>
                             </div>
                         </td>
                     </tr>
