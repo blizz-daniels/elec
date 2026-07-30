@@ -15,6 +15,11 @@ final class DashboardController extends Controller
     {
         Auth::requiresLogin();
 
+        $role = strtolower(trim((string) Auth::role()));
+        if ($role === 'registered-member' || $role === 'member') {
+            redirect('/member/dashboard');
+        }
+
         $pdo = Database::pdo();
 
         $stats = [

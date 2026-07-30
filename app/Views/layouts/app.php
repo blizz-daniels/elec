@@ -9,8 +9,10 @@ $title = $title ?? app('APP_NAME', 'Yayi Youth Vanguard');
 $currentUser = Auth::user();
 $currentRole = Auth::role();
 $isAuthView = str_contains($template, 'auth/');
+$dashboardHref = in_array($currentRole, ['registered-member', 'member'], true) ? url('/member/dashboard') : url('/dashboard');
+$dashboardLabel = in_array($currentRole, ['registered-member', 'member'], true) ? 'Member Dashboard' : 'Dashboard';
 $sidebarItems = [
-    ['label' => 'Dashboard', 'href' => url('/dashboard'), 'roles' => null],
+    ['label' => 'Dashboard', 'href' => $dashboardHref, 'roles' => null],
     ['label' => 'Members', 'href' => url('/admin/members'), 'roles' => ['super-admin', 'state-executive', 'lga-executive', 'ward-executive']],
     ['label' => 'Executives', 'href' => url('/admin/executives'), 'roles' => ['super-admin', 'state-executive']],
     ['label' => 'Geography', 'href' => url('/admin/geography'), 'roles' => ['super-admin', 'state-executive']],
@@ -84,7 +86,7 @@ $sidebarItems = [
             </nav>
             <div class="site-actions d-none d-lg-flex">
                 <?php if ($currentUser): ?>
-                    <a class="btn btn--ghost" href="<?= url('/dashboard'); ?>">Dashboard</a>
+                    <a class="btn btn--ghost" href="<?= $dashboardHref; ?>"><?= htmlspecialchars($dashboardLabel, ENT_QUOTES, 'UTF-8'); ?></a>
                     <form method="post" action="<?= url('/logout'); ?>" class="d-inline">
                         <?= csrf_field(); ?>
                     <button class="btn btn--accent" type="submit">Logout</button>
@@ -121,7 +123,7 @@ $sidebarItems = [
                 <?php endif; ?>
                 <div class="site-mobile-menu__actions">
                     <?php if ($currentUser): ?>
-                        <a class="btn btn--ghost" href="<?= url('/dashboard'); ?>">Dashboard</a>
+                        <a class="btn btn--ghost" href="<?= $dashboardHref; ?>">Dashboard</a>
                         <form method="post" action="<?= url('/logout'); ?>" class="d-grid">
                             <?= csrf_field(); ?>
                             <button class="btn btn--accent" type="submit">Logout</button>

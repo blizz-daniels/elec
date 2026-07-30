@@ -37,6 +37,14 @@ final class AuthController extends Controller
         Session::set('auth_user', $user);
         session_regenerate_id(true);
 
+        $roleSlug = strtolower(trim((string) ($user['role_slug'] ?? $user['role'] ?? '')));
+        $roleName = strtolower(trim((string) ($user['role_name'] ?? '')));
+        $isMember = $roleSlug === 'registered-member' || $roleName === 'registered member';
+
+        if ($isMember) {
+            redirect('/member/dashboard');
+        }
+
         redirect('/dashboard');
     }
 
