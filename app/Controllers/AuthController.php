@@ -67,11 +67,29 @@ final class AuthController extends Controller
                  INNER JOIN lgas ON lgas.id = wards.lga_id
                  ORDER BY wards.name'
             )->fetchAll(),
-            'pollingUnits' => $pdo->query(
-                'SELECT polling_units.id, polling_units.polling_name, polling_units.polling_code, polling_units.senatorial_district_id, polling_units.lga_id, polling_units.ward_id
-                 FROM polling_units
-                 ORDER BY polling_units.polling_name'
-            )->fetchAll(),
+            'pollingUnits' => array_map(
+                static function (array $unit): array {
+                    $parts = array_values(array_filter(explode('/', (string) ($unit['polling_code'] ?? '')), static fn (string $part): bool => $part !== ''));
+                    $unit['polling_unit_no'] = $parts !== [] ? (string) end($parts) : '';
+                    return $unit;
+                },
+                $pdo->query(
+                    'SELECT polling_units.id,
+                            polling_units.polling_name,
+                            polling_units.polling_code,
+                            polling_units.senatorial_district_id,
+                            polling_units.lga_id,
+                            polling_units.ward_id,
+                            senatorial_districts.name AS district_name,
+                            lgas.name AS lga_name,
+                            wards.name AS ward_name
+                     FROM polling_units
+                     INNER JOIN senatorial_districts ON senatorial_districts.id = polling_units.senatorial_district_id
+                     INNER JOIN lgas ON lgas.id = polling_units.lga_id
+                     INNER JOIN wards ON wards.id = polling_units.ward_id
+                     ORDER BY polling_units.polling_name'
+                )->fetchAll()
+            ),
         ]);
     }
 
@@ -92,9 +110,6 @@ final class AuthController extends Controller
             'gender',
             'vin',
             'nin',
-            'senatorial_district_id',
-            'lga_id',
-            'ward_id',
             'polling_unit_id',
             'password',
             'confirm_password',
@@ -147,56 +162,39 @@ final class AuthController extends Controller
         }
 
         $pdo = Database::pdo();
-        $districtId = (int) $request->input('senatorial_district_id', 0);
-        $lgaId = (int) $request->input('lga_id', 0);
-        $wardId = (int) $request->input('ward_id', 0);
         $pollingUnitId = (int) $request->input('polling_unit_id', 0);
 
-        $districtStmt = $pdo->prepare('SELECT id, name FROM senatorial_districts WHERE id = :id LIMIT 1');
-        $districtStmt->execute(['id' => $districtId]);
-        $district = $districtStmt->fetch();
-        if (!$district) {
-            $this->rememberRegisterInput($request);
-            flash('error', 'Select a valid senatorial district.');
-            redirect('/register');
-        }
-
-        $lgaStmt = $pdo->prepare('SELECT id, name, senatorial_district_id FROM lgas WHERE id = :id LIMIT 1');
-        $lgaStmt->execute(['id' => $lgaId]);
-        $lga = $lgaStmt->fetch();
-        if (!$lga || (int) $lga['senatorial_district_id'] !== $districtId) {
-            $this->rememberRegisterInput($request);
-            flash('error', 'Select a valid LGA for the chosen senatorial district.');
-            redirect('/register');
-        }
-
-        $wardStmt = $pdo->prepare('SELECT id, name, lga_id FROM wards WHERE id = :id LIMIT 1');
-        $wardStmt->execute(['id' => $wardId]);
-        $ward = $wardStmt->fetch();
-        if (!$ward || (int) $ward['lga_id'] !== $lgaId) {
-            $this->rememberRegisterInput($request);
-            flash('error', 'Select a valid ward for the chosen LGA.');
-            redirect('/register');
-        }
-
         $pollingUnitStmt = $pdo->prepare(
-            'SELECT id, polling_name, polling_code, senatorial_district_id, lga_id, ward_id
+            'SELECT polling_units.id,
+                    polling_units.polling_name,
+                    polling_units.polling_code,
+                    polling_units.senatorial_district_id,
+                    polling_units.lga_id,
+                    polling_units.ward_id,
+                    senatorial_districts.name AS district_name,
+                    lgas.name AS lga_name,
+                    wards.name AS ward_name
              FROM polling_units
-             WHERE id = :id
+             INNER JOIN senatorial_districts ON senatorial_districts.id = polling_units.senatorial_district_id
+             INNER JOIN lgas ON lgas.id = polling_units.lga_id
+             INNER JOIN wards ON wards.id = polling_units.ward_id
+             WHERE polling_units.id = :id
              LIMIT 1'
         );
         $pollingUnitStmt->execute(['id' => $pollingUnitId]);
         $pollingUnit = $pollingUnitStmt->fetch();
-        if (
-            !$pollingUnit
-            || (int) $pollingUnit['senatorial_district_id'] !== $districtId
-            || (int) $pollingUnit['lga_id'] !== $lgaId
-            || (int) $pollingUnit['ward_id'] !== $wardId
-        ) {
+        if (!$pollingUnit) {
             $this->rememberRegisterInput($request);
-            flash('error', 'Select a valid polling unit for the chosen ward.');
+            flash('error', 'Select a valid polling unit.');
             redirect('/register');
         }
+
+        $pollingUnitParts = array_values(array_filter(explode('/', (string) ($pollingUnit['polling_code'] ?? '')), static fn (string $part): bool => $part !== ''));
+        $pollingUnit['polling_unit_no'] = $pollingUnitParts !== [] ? (string) end($pollingUnitParts) : '';
+
+        $districtId = (int) $pollingUnit['senatorial_district_id'];
+        $lgaId = (int) $pollingUnit['lga_id'];
+        $wardId = (int) $pollingUnit['ward_id'];
 
         $existingEmailStmt = $pdo->prepare('SELECT id FROM members WHERE email = :email LIMIT 1');
         $existingEmailStmt->execute(['email' => $email]);
@@ -238,7 +236,7 @@ final class AuthController extends Controller
 
         foreach ([
             'surname', 'first_name', 'other_name', 'phone', 'email', 'state_of_origin', 'state_of_residence',
-            'date_of_birth', 'gender', 'vin', 'nin', 'senatorial_district_id', 'lga_id', 'ward_id', 'polling_unit_id',
+            'date_of_birth', 'gender', 'vin', 'nin', 'polling_unit_id',
         ] as $field) {
             Session::set('old.' . $field, null);
         }

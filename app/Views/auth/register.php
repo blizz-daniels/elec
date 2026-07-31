@@ -1,7 +1,4 @@
 <?php
-$districts = $districts ?? [];
-$lgas = $lgas ?? [];
-$wards = $wards ?? [];
 $pollingUnits = $pollingUnits ?? [];
 ?>
 
@@ -10,7 +7,7 @@ $pollingUnits = $pollingUnits ?? [];
         <div class="hero-badge mb-3">Membership enrollment</div>
         <h1 class="hero-title auth-hero__title">Join Yayi Youth Vanguard.</h1>
         <p class="hero-text auth-hero__text">
-            Create a member profile with the required biodata, identity records, and polling details for approval.
+            Create a member profile with the required biodata and choose your polling unit from one searchable list.
         </p>
     </div>
     <div class="auth-card auth-card--theme">
@@ -60,64 +57,67 @@ $pollingUnits = $pollingUnits ?? [];
             <div class="col-md-6">
                 <input class="form-control" name="nin" placeholder="NIN" value="<?= htmlspecialchars((string) old('nin'), ENT_QUOTES, 'UTF-8'); ?>" required>
             </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">Voting Senatorial District</label>
-                <select class="form-select" name="senatorial_district_id" required>
-                    <option value="">Select district</option>
-                    <?php foreach ($districts as $district): ?>
-                        <option value="<?= (int) $district['id']; ?>" <?= (string) old('senatorial_district_id') === (string) $district['id'] ? 'selected' : ''; ?>>
-                            <?= htmlspecialchars((string) $district['name'], ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">Voting Local Government Area (LGA)</label>
-                <select class="form-select" name="lga_id" required>
-                    <option value="">Select LGA</option>
-                    <?php foreach ($lgas as $lga): ?>
-                        <option value="<?= (int) $lga['id']; ?>" <?= (string) old('lga_id') === (string) $lga['id'] ? 'selected' : ''; ?>>
-                            <?= htmlspecialchars((string) $lga['name'] . ' - ' . (string) $lga['district_name'], ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">Voting Ward</label>
-                <select class="form-select" name="ward_id" required>
-                    <option value="">Select ward</option>
-                    <?php foreach ($wards as $ward): ?>
-                        <option value="<?= (int) $ward['id']; ?>" <?= (string) old('ward_id') === (string) $ward['id'] ? 'selected' : ''; ?>>
-                            <?= htmlspecialchars((string) $ward['name'] . ' - ' . (string) $ward['lga_name'], ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-6">
+            <div class="col-12">
                 <label class="form-label fw-semibold">Voting Polling Unit</label>
-                <select class="form-select" name="polling_unit_id" id="pollingUnitSelect" data-searchable-select data-searchable-placeholder="Type to search polling units" required>
+                <select
+                    class="form-select"
+                    name="polling_unit_id"
+                    id="pollingUnitSelect"
+                    data-searchable-select
+                    data-searchable-fields="polling_no,polling_code,ward,lga,district,name"
+                    data-searchable-placeholder="Search by unit no, code, ward, LGA, district, or name"
+                    required
+                >
                     <option value="">Select polling unit</option>
                     <?php foreach ($pollingUnits as $pollingUnit): ?>
                         <option
                             value="<?= (int) $pollingUnit['id']; ?>"
-                            data-unit-no="<?= htmlspecialchars((string) $pollingUnit['polling_name'], ENT_QUOTES, 'UTF-8'); ?>"
-                            data-unit-code="<?= htmlspecialchars((string) $pollingUnit['polling_code'], ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-name="<?= htmlspecialchars((string) $pollingUnit['polling_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-polling-no="<?= htmlspecialchars((string) ($pollingUnit['polling_unit_no'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-polling-code="<?= htmlspecialchars((string) $pollingUnit['polling_code'], ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-ward="<?= htmlspecialchars((string) $pollingUnit['ward_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-lga="<?= htmlspecialchars((string) $pollingUnit['lga_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-district="<?= htmlspecialchars((string) $pollingUnit['district_name'], ENT_QUOTES, 'UTF-8'); ?>"
                             <?= (string) old('polling_unit_id') === (string) $pollingUnit['id'] ? 'selected' : ''; ?>
                         >
-                            <?= htmlspecialchars((string) $pollingUnit['polling_name'] . ' - ' . (string) $pollingUnit['polling_code'], ENT_QUOTES, 'UTF-8'); ?>
+                            <?= htmlspecialchars((string) $pollingUnit['polling_name'] . ' [' . (string) ($pollingUnit['polling_unit_no'] ?? '') . '] | ' . (string) $pollingUnit['polling_code'] . ' | ' . (string) $pollingUnit['ward_name'] . ' | ' . (string) $pollingUnit['lga_name'] . ' | ' . (string) $pollingUnit['district_name'], ENT_QUOTES, 'UTF-8'); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <div class="form-text">Pick the polling unit from the directory. The unit number and code below will mirror your selection.</div>
+                <div class="form-text">Search by any part of the unit number, code, ward, LGA, district, or unit name.</div>
             </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">Voting Polling Unit No</label>
-                <input class="form-control" type="text" id="pollingUnitNo" name="polling_unit_no" value="<?= htmlspecialchars((string) old('polling_unit_no'), ENT_QUOTES, 'UTF-8'); ?>" readonly placeholder="Select polling unit">
+
+            <div class="col-12">
+                <div class="border rounded-3 p-3 bg-light-subtle" id="pollingUnitSummary">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="small text-muted">Polling Unit No</div>
+                            <div class="fw-semibold" data-summary-field="polling_no">-</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="small text-muted">Polling Unit Code</div>
+                            <div class="fw-semibold" data-summary-field="polling_code">-</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="small text-muted">Polling Unit</div>
+                            <div class="fw-semibold" data-summary-field="name">-</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="small text-muted">Ward</div>
+                            <div class="fw-semibold" data-summary-field="ward">-</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="small text-muted">LGA</div>
+                            <div class="fw-semibold" data-summary-field="lga">-</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="small text-muted">Senatorial District</div>
+                            <div class="fw-semibold" data-summary-field="district">-</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">Voting Polling Unit Code</label>
-                <input class="form-control" type="text" id="pollingUnitCode" name="polling_unit_code" value="<?= htmlspecialchars((string) old('polling_unit_code'), ENT_QUOTES, 'UTF-8'); ?>" readonly placeholder="Select polling unit">
-            </div>
+
             <div class="col-md-6">
                 <input class="form-control" type="password" name="password" placeholder="Password" required>
             </div>
@@ -145,20 +145,31 @@ $pollingUnits = $pollingUnits ?? [];
 <script>
 (() => {
     const pollingUnitSelect = document.getElementById('pollingUnitSelect');
-    const pollingUnitNo = document.getElementById('pollingUnitNo');
-    const pollingUnitCode = document.getElementById('pollingUnitCode');
-
-    if (!pollingUnitSelect || !pollingUnitNo || !pollingUnitCode) {
+    const summary = document.getElementById('pollingUnitSummary');
+    if (!pollingUnitSelect || !summary) {
         return;
     }
 
-    const syncPollingUnit = () => {
+    const summaryFields = summary.querySelectorAll('[data-summary-field]');
+
+    const updateSummary = () => {
         const selected = pollingUnitSelect.selectedOptions[0];
-        pollingUnitNo.value = selected?.dataset.unitNo || '';
-        pollingUnitCode.value = selected?.dataset.unitCode || '';
+        const values = {
+            polling_no: selected?.dataset.searchPollingNo || '',
+            polling_code: selected?.dataset.searchPollingCode || '',
+            name: selected?.dataset.searchName || '',
+            ward: selected?.dataset.searchWard || '',
+            lga: selected?.dataset.searchLga || '',
+            district: selected?.dataset.searchDistrict || '',
+        };
+
+        summaryFields.forEach((field) => {
+            const key = field.dataset.summaryField || '';
+            field.textContent = values[key] || '-';
+        });
     };
 
-    pollingUnitSelect.addEventListener('change', syncPollingUnit);
-    syncPollingUnit();
+    pollingUnitSelect.addEventListener('change', updateSummary);
+    updateSummary();
 })();
 </script>

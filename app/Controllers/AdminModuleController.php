@@ -272,6 +272,13 @@ final class AdminModuleController extends Controller
                 'id' => $memberId,
             ]);
 
+
+            if ($status === 'approved') {
+                $this->syncMemberUserAccount($pdo, $memberId, 'registered-member', 'active');
+            } else {
+                $this->syncMemberUserAccount($pdo, $memberId, 'registered-member', 'inactive', false);
+            }
+
             flash('success', 'Member updated.');
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -316,44 +323,7 @@ final class AdminModuleController extends Controller
             throw new \RuntimeException('Unable to determine the ward for this marshal.');
         }
 
-        $userStmt = $pdo->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
-        $userStmt->execute(['email' => $email]);
-        $userId = (int) ($userStmt->fetchColumn() ?: 0);
-
-        if ($userId > 0) {
-            $updateUser = $pdo->prepare(
-                'UPDATE users
-                 SET role_id = :role_id,
-                     full_name = :full_name,
-                     phone = :phone,
-                     password = :password,
-                     status = :status,
-                     updated_at = NOW()
-                 WHERE id = :id'
-            );
-            $updateUser->execute([
-                'role_id' => $roleId,
-                'full_name' => $fullName,
-                'phone' => $phone !== '' ? $phone : null,
-                'password' => $password,
-                'status' => 'active',
-                'id' => $userId,
-            ]);
-        } else {
-            $insertUser = $pdo->prepare(
-                'INSERT INTO users (role_id, full_name, email, phone, password, status)
-                 VALUES (:role_id, :full_name, :email, :phone, :password, :status)'
-            );
-            $insertUser->execute([
-                'role_id' => $roleId,
-                'full_name' => $fullName,
-                'email' => $email,
-                'phone' => $phone !== '' ? $phone : null,
-                'password' => $password,
-                'status' => 'active',
-            ]);
-            $userId = (int) $pdo->lastInsertId();
-        }
+        $userId = $this->syncMemberUserAccount($pdo, $memberId, 'polling-marshal', 'active');
 
         $marshalStmt = $pdo->prepare('SELECT id FROM polling_marshals WHERE user_id = :user_id LIMIT 1');
         $marshalStmt->execute(['user_id' => $userId]);
@@ -398,6 +368,72 @@ final class AdminModuleController extends Controller
             'status' => 'approved',
             'id' => $memberId,
         ]);
+    }
+
+    private function syncMemberUserAccount(\PDO $pdo, int $memberId, string $roleSlug, string $status = 'active', bool $createIfMissing = true): int
+    {
+        $memberStmt = $pdo->prepare('SELECT * FROM members WHERE id = :id LIMIT 1');
+        $memberStmt->execute(['id' => $memberId]);
+        $member = $memberStmt->fetch();
+        if (!$member) {
+            throw new \RuntimeException('Member record not found.');
+        }
+
+        $roleId = $this->roleId($pdo, $roleSlug);
+        $fullName = trim((string) ($member['surname'] ?? '') . ' ' . (string) ($member['first_name'] ?? '') . ' ' . (string) ($member['other_name'] ?? ''));
+        $email = trim((string) ($member['email'] ?? ''));
+        $phone = trim((string) ($member['phone'] ?? ''));
+        $password = (string) ($member['password'] ?? '');
+
+        if ($fullName === '' || $email === '' || $password === '') {
+            throw new \RuntimeException('Member data is incomplete.');
+        }
+
+        $userStmt = $pdo->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
+        $userStmt->execute(['email' => $email]);
+        $userId = (int) ($userStmt->fetchColumn() ?: 0);
+
+        if ($userId > 0) {
+            $updateUser = $pdo->prepare(
+                'UPDATE users
+                 SET role_id = :role_id,
+                     full_name = :full_name,
+                     phone = :phone,
+                     password = :password,
+                     status = :status,
+                     updated_at = NOW()
+                 WHERE id = :id'
+            );
+            $updateUser->execute([
+                'role_id' => $roleId,
+                'full_name' => $fullName,
+                'phone' => $phone !== '' ? $phone : null,
+                'password' => $password,
+                'status' => $status,
+                'id' => $userId,
+            ]);
+
+            return $userId;
+        }
+
+        if (!$createIfMissing) {
+            return 0;
+        }
+
+        $insertUser = $pdo->prepare(
+            'INSERT INTO users (role_id, full_name, email, phone, password, status)
+             VALUES (:role_id, :full_name, :email, :phone, :password, :status)'
+        );
+        $insertUser->execute([
+            'role_id' => $roleId,
+            'full_name' => $fullName,
+            'email' => $email,
+            'phone' => $phone !== '' ? $phone : null,
+            'password' => $password,
+            'status' => $status,
+        ]);
+
+        return (int) $pdo->lastInsertId();
     }
 
     private function roleId(\PDO $pdo, string $slug): int
