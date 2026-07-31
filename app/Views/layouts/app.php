@@ -19,13 +19,13 @@ $sidebarItems = [
     ['label' => 'Polling Units', 'href' => url('/admin/polling-units'), 'roles' => ['super-admin', 'state-executive', 'lga-executive']],
     ['label' => 'Marshals', 'href' => url('/admin/marshals'), 'roles' => ['super-admin', 'state-executive', 'lga-executive']],
     ['label' => 'Candidates', 'href' => url('/admin/candidates'), 'roles' => ['super-admin', 'state-executive']],
-    ['label' => 'Elections', 'href' => url('/elections'), 'roles' => null],
-    ['label' => 'Results', 'href' => url('/results'), 'roles' => null],
+    ['label' => 'Elections', 'href' => url('/elections'), 'roles' => ['super-admin', 'state-executive']],
+    ['label' => 'Results', 'href' => url('/results'), 'roles' => ['super-admin', 'state-executive', 'lga-executive', 'polling-marshal']],
     ['label' => 'Reports', 'href' => url('/reports'), 'roles' => ['super-admin', 'state-executive', 'lga-executive', 'ward-executive']],
     ['label' => 'Notifications', 'href' => url('/notifications'), 'roles' => null],
     ['label' => 'Audit Logs', 'href' => url('/admin/audit-logs'), 'roles' => ['super-admin']],
     ['label' => 'Profile', 'href' => url('/profile'), 'roles' => null],
-    ['label' => 'Settings', 'href' => url('/settings'), 'roles' => ['super-admin', 'state-executive']],
+    ['label' => 'Settings', 'href' => url('/settings'), 'roles' => ['super-admin']],
 ];
 ?>
 <!doctype html>
@@ -79,11 +79,13 @@ $sidebarItems = [
                     <a class="site-nav__link" href="<?= url('/#about-platform'); ?>">About</a>
                 <?php endif; ?>
                 <?php if ($currentUser): ?>
-                    <a class="site-nav__link" href="<?= url('/member/dashboard'); ?>">Member Area</a>
-                    <a class="site-nav__link" href="<?= url('/elections'); ?>">Elections</a>
-                    <a class="site-nav__link" href="<?= url('/results'); ?>">Results</a>
+                    <?php if (in_array($currentRole, ['super-admin', 'state-executive'], true)): ?>
+                        <a class="site-nav__link" href="<?= url('/elections'); ?>">Elections</a>
+                    <?php endif; ?>
+                    <?php if (in_array($currentRole, ['super-admin', 'state-executive', 'lga-executive', 'polling-marshal'], true)): ?>
+                        <a class="site-nav__link" href="<?= url('/results'); ?>">Results</a>
+                    <?php endif; ?>
                 <?php endif; ?>
-            </nav>
             <div class="site-actions d-none d-lg-flex">
                 <?php if ($currentUser): ?>
                     <a class="btn btn--ghost" href="<?= $dashboardHref; ?>"><?= htmlspecialchars($dashboardLabel, ENT_QUOTES, 'UTF-8'); ?></a>
@@ -104,9 +106,12 @@ $sidebarItems = [
                         <a href="<?= url('/#about-platform'); ?>">About</a>
                     <?php endif; ?>
                     <?php if ($currentUser): ?>
-                        <a href="<?= url('/member/dashboard'); ?>">Member Area</a>
-                        <a href="<?= url('/elections'); ?>">Elections</a>
-                        <a href="<?= url('/results'); ?>">Results</a>
+                        <?php if (in_array($currentRole, ['super-admin', 'state-executive'], true)): ?>
+                            <a href="<?= url('/elections'); ?>">Elections</a>
+                        <?php endif; ?>
+                        <?php if (in_array($currentRole, ['super-admin', 'state-executive', 'lga-executive', 'polling-marshal'], true)): ?>
+                            <a href="<?= url('/results'); ?>">Results</a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </nav>
                 <?php if ($currentUser): ?>

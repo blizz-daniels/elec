@@ -15,13 +15,71 @@ final class DashboardController extends Controller
     {
         Auth::requiresLogin();
 
-        $role = strtolower(trim((string) Auth::role()));
-        if ($role === 'registered-member' || $role === 'member') {
+        $roleSlug = strtolower(trim((string) Auth::role()));
+        if ($roleSlug === 'registered-member' || $roleSlug === 'member') {
             redirect('/member/dashboard');
         }
 
         $pdo = Database::pdo();
+        $dashboard = $this->dashboardForRole($pdo, $roleSlug);
+        $this->view($dashboard['view'], $dashboard['data']);
+    }
 
+    private function dashboardForRole(\PDO $pdo, string $roleSlug): array
+    {
+        $common = $this->commonDashboardData($pdo);
+
+        return match ($roleSlug) {
+            'state-executive' => [
+                'view' => 'dashboard/state-executive',
+                'data' => array_merge($common, [
+                    'title' => 'State Executive Dashboard',
+                    'dashboardTitle' => 'State Executive Dashboard',
+                    'dashboardSubtitle' => 'Statewide oversight for districts, LGAs, wards, polling units, and election activity.',
+                    'roleLabel' => 'State Executive',
+                ]),
+            ],
+            'lga-executive' => [
+                'view' => 'dashboard/lga-executive',
+                'data' => array_merge($common, [
+                    'title' => 'LGA Executive Dashboard',
+                    'dashboardTitle' => 'LGA Executive Dashboard',
+                    'dashboardSubtitle' => 'Local-government operations, member approvals, polling units, and result handling.',
+                    'roleLabel' => 'LGA Executive',
+                ]),
+            ],
+            'ward-executive' => [
+                'view' => 'dashboard/ward-executive',
+                'data' => array_merge($common, [
+                    'title' => 'Ward Executive Dashboard',
+                    'dashboardTitle' => 'Ward Executive Dashboard',
+                    'dashboardSubtitle' => 'Ward-level monitoring for members, polling activity, and result progress.',
+                    'roleLabel' => 'Ward Executive',
+                ]),
+            ],
+            'polling-marshal' => [
+                'view' => 'dashboard/polling-marshal',
+                'data' => array_merge($common, [
+                    'title' => 'Polling Marshal Dashboard',
+                    'dashboardTitle' => 'Polling Marshal Dashboard',
+                    'dashboardSubtitle' => 'Polling-station assignment, result submission, and verification workflow.',
+                    'roleLabel' => 'Polling Marshal',
+                ]),
+            ],
+            default => [
+                'view' => 'dashboard/index',
+                'data' => array_merge($common, [
+                    'title' => 'Super Admin Dashboard',
+                    'dashboardTitle' => 'Super Admin Dashboard',
+                    'dashboardSubtitle' => 'Full platform overview across membership, elections, results, and geography.',
+                    'roleLabel' => 'Super Admin',
+                ]),
+            ],
+        };
+    }
+
+    private function commonDashboardData(\PDO $pdo): array
+    {
         $stats = [
             'members' => (int) $pdo->query('SELECT COUNT(*) FROM members')->fetchColumn(),
             'approved_members' => (int) $pdo->query("SELECT COUNT(*) FROM members WHERE status = 'approved'")->fetchColumn(),
@@ -32,6 +90,8 @@ final class DashboardController extends Controller
             'results_pending' => (int) $pdo->query("SELECT COUNT(*) FROM vote_results WHERE status IN ('submitted', 'pending')")->fetchColumn(),
             'results_verified' => (int) $pdo->query("SELECT COUNT(*) FROM vote_results WHERE status IN ('verified', 'approved', 'published')")->fetchColumn(),
             'districts' => (int) $pdo->query('SELECT COUNT(*) FROM senatorial_districts')->fetchColumn(),
+            'lgas' => (int) $pdo->query('SELECT COUNT(*) FROM lgas')->fetchColumn(),
+            'wards' => (int) $pdo->query('SELECT COUNT(*) FROM wards')->fetchColumn(),
         ];
 
         $progress = 0;
@@ -65,13 +125,40 @@ final class DashboardController extends Controller
              ORDER BY total DESC'
         )->fetchAll();
 
-        $this->view('dashboard/index', [
-            'title' => 'Dashboard',
+        $assignedPollingUnits = [];
+        $assignedCount = 0;
+        $user = Auth::user() ?? [];
+        $email = trim((string) ($user['email'] ?? ''));
+        if ($email !== '') {
+            $assignedStmt = $pdo->prepare(
+                'SELECT polling_marshals.id AS marshal_id,
+                        polling_units.polling_name,
+                        polling_units.polling_code,
+                        wards.name AS ward_name,
+                        lgas.name AS lga_name,
+                        polling_marshals.status AS marshal_status
+                 FROM polling_marshals
+                 INNER JOIN polling_units ON polling_units.id = polling_marshals.polling_unit_id
+                 LEFT JOIN wards ON wards.id = polling_marshals.ward_id
+                 LEFT JOIN lgas ON lgas.id = wards.lga_id
+                 LEFT JOIN users ON users.id = polling_marshals.user_id
+                 WHERE users.email = :email
+                 ORDER BY polling_marshals.id DESC'
+            );
+            $assignedStmt->execute(['email' => $email]);
+            $assignedPollingUnits = $assignedStmt->fetchAll();
+            $assignedCount = count($assignedPollingUnits);
+        }
+
+        return [
             'stats' => $stats,
             'progress' => $progress,
             'recentMembers' => $recentMembers,
             'recentResults' => $recentResults,
             'statusBreakdown' => $statusBreakdown,
-        ]);
+            'assignedPollingUnits' => $assignedPollingUnits,
+            'assignedCount' => $assignedCount,
+            'roleSlug' => strtolower(trim((string) Auth::role())),
+        ];
     }
 }

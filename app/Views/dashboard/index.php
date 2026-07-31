@@ -4,13 +4,14 @@ $progress = (int) ($progress ?? 0);
 $recentMembers = $recentMembers ?? [];
 $recentResults = $recentResults ?? [];
 $statusBreakdown = $statusBreakdown ?? [];
+$dashboardTitle = $dashboardTitle ?? 'Super Admin Dashboard';
+$dashboardSubtitle = $dashboardSubtitle ?? 'Full platform overview across membership, elections, results, and geography.';
 ?>
 
 <div class="mb-4">
-    <h1 class="h3 mb-1">Dashboard</h1>
-    <p class="text-muted mb-0">Live membership and election monitoring overview.</p>
+    <h1 class="h3 mb-1"><?= htmlspecialchars($dashboardTitle, ENT_QUOTES, 'UTF-8'); ?></h1>
+    <p class="text-muted mb-0"><?= htmlspecialchars($dashboardSubtitle, ENT_QUOTES, 'UTF-8'); ?></p>
 </div>
-
 <div class="row g-3 mb-4">
     <div class="col-md-6 col-xl-3">
         <div class="card p-4 h-100">
