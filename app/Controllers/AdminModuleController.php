@@ -279,6 +279,12 @@ final class AdminModuleController extends Controller
                 $this->syncMemberUserAccount($pdo, $memberId, 'registered-member', 'inactive', false);
             }
 
+            try {
+                (new \App\Services\MemberCardService())->issueForMember($memberId);
+            } catch (\Throwable $cardError) {
+                flash('error', 'Member updated, but the membership card could not be generated yet.');
+            }
+
             flash('success', 'Member updated.');
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -368,6 +374,12 @@ final class AdminModuleController extends Controller
             'status' => 'approved',
             'id' => $memberId,
         ]);
+        try {
+            (new \App\Services\MemberCardService())->issueForMember($memberId);
+        } catch (\Throwable $cardError) {
+            flash('error', 'Member promoted, but the membership card could not be generated yet.');
+        }
+
     }
 
     private function syncMemberUserAccount(\PDO $pdo, int $memberId, string $roleSlug, string $status = 'active', bool $createIfMissing = true): int

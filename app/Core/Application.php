@@ -57,6 +57,9 @@ final class Application
 
         $router->get('/dashboard', [DashboardController::class, 'index']);
         $router->get('/member/dashboard', [MemberController::class, 'dashboard']);
+        $router->get('/member/card/pdf', [MemberController::class, 'downloadCardPdf']);
+        $router->get('/member/card/qr', [MemberController::class, 'showCardQr']);
+        $router->get('/member/card/qr/download', [MemberController::class, 'downloadCardQr']);
         $router->get('/admin/members', [AdminModuleController::class, 'members']);
         $router->post('/admin/members', [AdminModuleController::class, 'members']);
         $router->get('/admin/executives', [AdminModuleController::class, 'executives']);
@@ -82,3 +85,4 @@ final class Application
         return $router;
     }
 }
+

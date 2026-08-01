@@ -27,9 +27,20 @@ final class ResultController extends Controller
         $assignedPollingUnits = [];
         if (($user['role_slug'] ?? '') === 'polling-marshal' && !empty($user['id'])) {
             $stmt = $pdo->prepare(
-                'SELECT polling_units.id, polling_units.polling_name
+                'SELECT polling_units.id,
+                        polling_units.polling_name,
+                        polling_units.polling_code,
+                        polling_units.senatorial_district_id,
+                        polling_units.lga_id,
+                        polling_units.ward_id,
+                        senatorial_districts.name AS district_name,
+                        lgas.name AS lga_name,
+                        wards.name AS ward_name
                  FROM polling_marshals
                  INNER JOIN polling_units ON polling_units.id = polling_marshals.polling_unit_id
+                 LEFT JOIN senatorial_districts ON senatorial_districts.id = polling_units.senatorial_district_id
+                 LEFT JOIN lgas ON lgas.id = polling_units.lga_id
+                 LEFT JOIN wards ON wards.id = polling_units.ward_id
                  WHERE polling_marshals.user_id = :user_id
                  ORDER BY polling_units.polling_name'
             );
@@ -38,7 +49,22 @@ final class ResultController extends Controller
         }
 
         if ($assignedPollingUnits === []) {
-            $assignedPollingUnits = $pdo->query('SELECT id, polling_name FROM polling_units ORDER BY polling_name')->fetchAll();
+            $assignedPollingUnits = $pdo->query(
+                'SELECT polling_units.id,
+                        polling_units.polling_name,
+                        polling_units.polling_code,
+                        polling_units.senatorial_district_id,
+                        polling_units.lga_id,
+                        polling_units.ward_id,
+                        senatorial_districts.name AS district_name,
+                        lgas.name AS lga_name,
+                        wards.name AS ward_name
+                 FROM polling_units
+                 LEFT JOIN senatorial_districts ON senatorial_districts.id = polling_units.senatorial_district_id
+                 LEFT JOIN lgas ON lgas.id = polling_units.lga_id
+                 LEFT JOIN wards ON wards.id = polling_units.ward_id
+                 ORDER BY polling_units.polling_name'
+            )->fetchAll();
         }
 
         $results = $pdo->query(
@@ -230,3 +256,4 @@ final class ResultController extends Controller
         flash('success', 'Result updated.');
     }
 }
+

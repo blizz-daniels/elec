@@ -12,6 +12,7 @@ $pollingUnitName = trim((string) ($profile['polling_name'] ?? ''));
 $pollingUnitCode = trim((string) ($profile['polling_code'] ?? ''));
 $lastLogin = !empty($profile['last_login_at']) ? date('F j, Y g:i A', strtotime((string) $profile['last_login_at'])) : 'Never';
 $avatar = strtoupper(substr($displayName !== '' ? $displayName : 'M', 0, 1));
+$memberCard = $memberCard ?? [];
 ?>
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
@@ -86,6 +87,8 @@ $avatar = strtoupper(substr($displayName !== '' ? $displayName : 'M', 0, 1));
                     </div>
                 </div>
             </div>
+
+            <?php require App\Support\Config::basePath('app/Views/partials/member-card.php'); ?>
 
             <div class="mt-4 pt-3 border-top d-flex flex-wrap gap-2 justify-content-between align-items-center">
                 <div class="text-muted small">Welcome back, <?= htmlspecialchars($displayName !== '' ? $displayName : 'member', ENT_QUOTES, 'UTF-8'); ?>.</div>
