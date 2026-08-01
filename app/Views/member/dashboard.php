@@ -11,6 +11,7 @@ $wardName = trim((string) ($profile['ward_name'] ?? ''));
 $pollingUnitName = trim((string) ($profile['polling_name'] ?? ''));
 $pollingUnitCode = trim((string) ($profile['polling_code'] ?? ''));
 $lastLogin = !empty($profile['last_login_at']) ? date('F j, Y g:i A', strtotime((string) $profile['last_login_at'])) : 'Never';
+$photoUrl = trim((string) ($profile['passport_path'] ?? $profile['avatar_path'] ?? ''));
 $avatar = strtoupper(substr($displayName !== '' ? $displayName : 'M', 0, 1));
 $memberCard = $memberCard ?? [];
 ?>
@@ -26,8 +27,12 @@ $memberCard = $memberCard ?? [];
     <div class="col-lg-8 col-xl-7">
         <div class="card p-4 shadow-sm">
             <div class="d-flex align-items-center gap-3 mb-4">
-                <div class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success fw-bold" style="width:72px;height:72px;font-size:1.5rem;">
-                    <?= htmlspecialchars($avatar, ENT_QUOTES, 'UTF-8'); ?>
+                <div class="rounded-circle overflow-hidden d-flex align-items-center justify-content-center bg-success-subtle text-success fw-bold" style="width:72px;height:72px;font-size:1.5rem;">
+                    <?php if ($photoUrl !== ''): ?>
+                        <img src="<?= htmlspecialchars(url($photoUrl), ENT_QUOTES, 'UTF-8'); ?>" alt="Profile photo" class="w-100 h-100" style="object-fit:cover;">
+                    <?php else: ?>
+                        <?= htmlspecialchars($avatar, ENT_QUOTES, 'UTF-8'); ?>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <div class="text-uppercase small text-muted fw-semibold mb-1">Account</div>

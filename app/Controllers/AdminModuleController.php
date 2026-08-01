@@ -210,9 +210,15 @@ final class AdminModuleController extends Controller
         $email = trim((string) ($currentUser['email'] ?? ''));
 
         $stmt = $pdo->prepare(
-            'SELECT users.*, roles.name AS role_name, roles.slug AS role_slug
+            'SELECT users.*, roles.name AS role_name, roles.slug AS role_slug,
+                    members.passport_path AS passport_path,
+                    members.membership_number AS membership_number,
+                    members.surname AS member_surname,
+                    members.first_name AS member_first_name,
+                    members.other_name AS member_other_name
              FROM users
              INNER JOIN roles ON roles.id = users.role_id
+             LEFT JOIN members ON members.email = users.email
              WHERE users.id = :id OR users.email = :email
              LIMIT 1'
         );
@@ -222,10 +228,14 @@ final class AdminModuleController extends Controller
         ]);
 
         $user = $stmt->fetch() ?: $currentUser;
+        $photoPath = trim((string) ($user['passport_path'] ?? $user['avatar_path'] ?? ''));
+        $photoUrl = $photoPath !== '' ? url($photoPath) : '';
 
         $this->view('admin/profile', [
             'title' => 'Profile',
             'user' => $user,
+            'photoPath' => $photoPath,
+            'photoUrl' => $photoUrl,
         ]);
     }
 

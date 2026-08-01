@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Support\Auth;
+use App\Support\Config;
 use App\Support\Csrf;
 use App\Support\Database;
 use App\Support\FileUpload;
@@ -68,12 +69,17 @@ final class ResultController extends Controller
         }
 
         $results = $pdo->query(
-            'SELECT vote_results.*,
+            'SELECT vote_results.*, 
                     elections.name AS election_name,
                     elections.status AS election_status,
                     polling_units.polling_name,
                     polling_units.polling_code,
-                    COALESCE(attachment_stats.total_attachments, 0) AS attachment_count
+                    COALESCE(attachment_stats.total_attachments, 0) AS attachment_count,
+                    latest_attachment.id AS attachment_id,
+                    latest_attachment.file_name AS attachment_file_name,
+                    latest_attachment.file_path AS attachment_file_path,
+                    latest_attachment.mime_type AS attachment_mime_type,
+                    latest_attachment.file_size AS attachment_file_size
              FROM vote_results
              INNER JOIN elections ON elections.id = vote_results.election_id
              INNER JOIN polling_units ON polling_units.id = vote_results.polling_unit_id
@@ -83,6 +89,13 @@ final class ResultController extends Controller
                 WHERE related_type = "vote_result"
                 GROUP BY related_id
              ) AS attachment_stats ON attachment_stats.related_id = vote_results.id
+             LEFT JOIN attachments AS latest_attachment ON latest_attachment.id = (
+                SELECT a.id
+                FROM attachments a
+                WHERE a.related_type = "vote_result" AND a.related_id = vote_results.id
+                ORDER BY a.id DESC
+                LIMIT 1
+             )
              ORDER BY vote_results.id DESC'
         )->fetchAll();
 
@@ -94,6 +107,52 @@ final class ResultController extends Controller
         ]);
     }
 
+    public function attachment(Request $request): void
+    {
+        Auth::requiresRole(['super-admin', 'state-executive', 'lga-executive', 'polling-marshal']);
+        $pdo = Database::pdo();
+        $attachmentId = (int) $request->input('id', 0);
+        $mode = (string) $request->input('mode', 'open');
+
+        if ($attachmentId <= 0) {
+            flash('error', 'Attachment not found.');
+            redirect('/results');
+        }
+
+        $stmt = $pdo->prepare(
+            'SELECT id, file_name, file_path, mime_type, file_size
+             FROM attachments
+             WHERE id = :id AND related_type = :related_type
+             LIMIT 1'
+        );
+        $stmt->execute([
+            'id' => $attachmentId,
+            'related_type' => 'vote_result',
+        ]);
+        $attachment = $stmt->fetch();
+        if (!$attachment) {
+            flash('error', 'Attachment not found.');
+            redirect('/results');
+        }
+
+        $relativePath = trim((string) ($attachment['file_path'] ?? ''));
+        $absolutePath = $relativePath !== '' ? Config::basePath('public/' . $relativePath) : '';
+        if ($absolutePath === '' || !is_file($absolutePath)) {
+            flash('error', 'Attachment file is missing from the server.');
+            redirect('/results');
+        }
+
+        $fileName = basename(trim((string) ($attachment['file_name'] ?? 'attachment')) ?: 'attachment');
+        $mime = trim((string) ($attachment['mime_type'] ?? 'application/octet-stream')) ?: 'application/octet-stream';
+        $disposition = $mode === 'download' ? 'attachment' : 'inline';
+
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . (string) filesize($absolutePath));
+        header('Content-Disposition: ' . $disposition . '; filename="' . str_replace('"', '', $fileName) . '"');
+        header('X-Content-Type-Options: nosniff');
+        readfile($absolutePath);
+        exit;
+    }
     private function handlePost(Request $request, \PDO $pdo): void
     {
         if (!Csrf::validate((string) $request->input('csrf_token'))) {

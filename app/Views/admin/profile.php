@@ -1,5 +1,7 @@
 <?php
 $user = $user ?? [];
+$photoUrl = trim((string) ($photoUrl ?? ''));
+$photoPath = trim((string) ($photoPath ?? ''));
 $displayName = trim((string) ($user['full_name'] ?? ''));
 $roleName = trim((string) ($user['role_name'] ?? $user['role'] ?? $user['role_slug'] ?? 'Member'));
 $email = trim((string) ($user['email'] ?? ''));
@@ -20,8 +22,12 @@ $avatar = strtoupper(substr($displayName !== '' ? $displayName : 'U', 0, 1));
     <div class="col-lg-7 col-xl-6">
         <div class="card p-4 shadow-sm">
             <div class="d-flex align-items-center gap-3 mb-4">
-                <div class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success fw-bold" style="width:72px;height:72px;font-size:1.5rem;">
-                    <?= htmlspecialchars($avatar, ENT_QUOTES, 'UTF-8'); ?>
+                <div class="rounded-circle overflow-hidden d-flex align-items-center justify-content-center bg-success-subtle text-success fw-bold" style="width:72px;height:72px;font-size:1.5rem;">
+                    <?php if ($photoUrl !== ''): ?>
+                        <img src="<?= htmlspecialchars($photoUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="Profile photo" class="w-100 h-100" style="object-fit:cover;">
+                    <?php else: ?>
+                        <?= htmlspecialchars($avatar, ENT_QUOTES, 'UTF-8'); ?>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <div class="text-uppercase small text-muted fw-semibold mb-1">Account</div>

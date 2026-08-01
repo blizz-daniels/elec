@@ -78,6 +78,7 @@ final class Application
         $router->post('/elections', [ElectionController::class, 'index']);
         $router->get('/results', [ResultController::class, 'index']);
         $router->post('/results', [ResultController::class, 'index']);
+        $router->get('/results/attachment', [ResultController::class, 'attachment']);
         $router->get('/reports', [ReportController::class, 'index']);
         $router->get('/notifications', [NotificationController::class, 'index']);
         $router->get('/settings', [SettingsController::class, 'index']);

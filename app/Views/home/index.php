@@ -1,4 +1,4 @@
-<section class="hero-section">
+﻿<section class="hero-section">
     <div class="hero-grid">
         <div class="hero-copy">
             <span class="hero-badge">Yayi Youth Vanguard</span>
@@ -16,7 +16,7 @@
                 <div class="hero-panel__image">
                     <img
                         class="hero-panel__logo"
-                        src="<?= htmlspecialchars(url('public/assets/' . rawurlencode('WhatsApp Image 2026-07-23 at 1.17.59 PM.jpeg')), ENT_QUOTES, 'UTF-8'); ?>"
+                        src="<?= htmlspecialchars(url('assets/' . rawurlencode('WhatsApp Image 2026-07-23 at 1.17.59 PM.jpeg')), ENT_QUOTES, 'UTF-8'); ?>"
                         alt="Yayi Youth Vanguard logo"
                     >
                 </div>
@@ -138,3 +138,4 @@
         </div>
     </div>
 </section>
+

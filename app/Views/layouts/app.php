@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -39,7 +39,7 @@ $sidebarItems = [
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-    <link href="<?= url('public/assets/css/app.css'); ?>" rel="stylesheet">
+    <link href="<?= url('assets/css/app.css'); ?>" rel="stylesheet">
 </head>
 <body class="app-shell app-theme">
 <?php if (!$isAuthView): ?>
@@ -49,12 +49,12 @@ $sidebarItems = [
                 <span class="brand-mark__icon brand-mark__icon--logos" aria-hidden="true">
                     <img
                         class="brand-mark__logo-image"
-                        src="<?= htmlspecialchars(url('public/assets/' . rawurlencode('WhatsApp Image 2026-07-23 at 1.17.59 PM.jpeg')), ENT_QUOTES, 'UTF-8'); ?>"
+                        src="<?= htmlspecialchars(url('assets/' . rawurlencode('WhatsApp Image 2026-07-23 at 1.17.59 PM.jpeg')), ENT_QUOTES, 'UTF-8'); ?>"
                         alt=""
                     >
                     <img
                         class="brand-mark__logo-image brand-mark__logo-image--secondary"
-                        src="<?= htmlspecialchars(url('public/assets/' . rawurlencode('WhatsApp Image 2026-07-23 at 1.20.54 PM.jpeg')), ENT_QUOTES, 'UTF-8'); ?>"
+                        src="<?= htmlspecialchars(url('assets/' . rawurlencode('WhatsApp Image 2026-07-23 at 1.20.54 PM.jpeg')), ENT_QUOTES, 'UTF-8'); ?>"
                         alt=""
                     >
                 </span>
@@ -179,6 +179,7 @@ $sidebarItems = [
 <?php endif; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="<?= url('public/assets/js/app.js'); ?>"></script>
+<script src="<?= url('assets/js/app.js'); ?>"></script>
 </body>
 </html>
+

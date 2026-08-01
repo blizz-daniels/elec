@@ -28,7 +28,18 @@ $pollingUnits = $pollingUnits ?? [];
             <select class="form-select" name="polling_unit_id" data-searchable-select data-searchable-placeholder="Type to search polling units" required>
                 <option value="">Select polling unit</option>
                 <?php foreach ($pollingUnits as $unit): ?>
-                    <option value="<?= (int) $unit['id']; ?>"><?= htmlspecialchars((string) $unit['polling_name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                    <option value="<?= (int) $unit['id']; ?>">
+                        <?= htmlspecialchars((string) $unit['polling_name'], ENT_QUOTES, 'UTF-8'); ?>
+                        <?php if (!empty($unit['polling_code']) || !empty($unit['ward_name']) || !empty($unit['lga_name']) || !empty($unit['district_name'])): ?>
+                            -
+                            <?= htmlspecialchars(trim(implode(' | ', array_filter([
+                                (string) ($unit['polling_code'] ?? ''),
+                                (string) ($unit['ward_name'] ?? ''),
+                                (string) ($unit['lga_name'] ?? ''),
+                                (string) ($unit['district_name'] ?? ''),
+                            ]))), ENT_QUOTES, 'UTF-8'); ?>
+                        <?php endif; ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -63,6 +74,7 @@ $pollingUnits = $pollingUnits ?? [];
 </div>
 
 <div class="card p-4">
+                    latest_attachment.id AS attachment_id,
     <div class="table-responsive">
         <table class="table align-middle">
             <thead>
@@ -77,6 +89,16 @@ $pollingUnits = $pollingUnits ?? [];
             </thead>
             <tbody>
             <?php foreach ($results as $result): ?>
+                <?php
+                $attachmentId = (int) ($result['attachment_id'] ?? 0);
+                $attachmentName = trim((string) ($result['attachment_file_name'] ?? ''));
+                $attachmentMime = trim((string) ($result['attachment_mime_type'] ?? ''));
+                $attachmentSize = (int) ($result['attachment_file_size'] ?? 0);
+                $attachmentViewUrl = $attachmentId > 0 ? url('/results/attachment?id=' . $attachmentId . '&mode=open') : '';
+                $attachmentDownloadUrl = $attachmentId > 0 ? url('/results/attachment?id=' . $attachmentId . '&mode=download') : '';
+                $isImage = $attachmentViewUrl !== '' && str_starts_with($attachmentMime, 'image/');
+                $isPdf = $attachmentViewUrl !== '' && $attachmentMime === 'application/pdf';
+                ?>
                 <tr>
                     <td>
                         <div class="fw-semibold"><?= htmlspecialchars((string) $result['election_name'], ENT_QUOTES, 'UTF-8'); ?></div>
@@ -91,7 +113,38 @@ $pollingUnits = $pollingUnits ?? [];
                         <div class="text-muted small">Total: <?= (int) $result['total_votes']; ?> | Rejected: <?= (int) $result['rejected_votes']; ?> | Cancelled: <?= (int) $result['cancelled_votes']; ?></div>
                     </td>
                     <td><span class="badge text-bg-secondary"><?= htmlspecialchars((string) $result['status'], ENT_QUOTES, 'UTF-8'); ?></span></td>
-                    <td><?= (int) ($result['attachment_count'] ?? 0); ?></td>
+                    <td>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="small text-muted">
+                                <?= (int) ($result['attachment_count'] ?? 0); ?> file<?= (int) ($result['attachment_count'] ?? 0) === 1 ? '' : 's'; ?> attached
+                            </div>
+                            <?php if ($attachmentViewUrl !== ''): ?>
+                                <?php if ($isImage): ?>
+                                    <a href="<?= htmlspecialchars($attachmentViewUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noreferrer" class="d-inline-block">
+                                        <img src="<?= htmlspecialchars($attachmentViewUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="Result attachment preview" class="img-thumbnail" style="max-width:120px;max-height:120px;object-fit:cover;">
+                                    </a>
+                                <?php elseif ($isPdf): ?>
+                                    <div class="border rounded overflow-hidden bg-white" style="width:180px;max-width:100%;">
+                                        <iframe src="<?= htmlspecialchars($attachmentViewUrl, ENT_QUOTES, 'UTF-8'); ?>" title="PDF preview" style="width:100%;height:220px;border:0;"></iframe>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-muted small">Preview unavailable for this file type.</div>
+                                <?php endif; ?>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a class="btn btn-sm btn-outline-secondary" href="<?= htmlspecialchars($attachmentViewUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noreferrer">Open</a>
+                                    <a class="btn btn-sm btn-outline-primary" href="<?= htmlspecialchars($attachmentDownloadUrl, ENT_QUOTES, 'UTF-8'); ?>" download="<?= htmlspecialchars($attachmentName !== '' ? $attachmentName : 'result-attachment', ENT_QUOTES, 'UTF-8'); ?>">Download</a>
+                                </div>
+                                <div class="text-muted small">
+                                    <?= htmlspecialchars($attachmentName !== '' ? $attachmentName : 'Attachment file', ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php if ($attachmentSize > 0): ?>
+                                        &middot; <?= number_format($attachmentSize / 1024, 1); ?> KB
+                                    <?php endif; ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-muted small">No attachment uploaded.</div>
+                            <?php endif; ?>
+                        </div>
+                    </td>
                     <td class="text-end">
                         <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
                             <form method="post" action="<?= url('/results'); ?>">
