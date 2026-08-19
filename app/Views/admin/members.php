@@ -43,11 +43,22 @@ $selectedLgaId = (int) ($selectedLgaId ?? 0);
 </div>
 
 <div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="text-muted small">Select registered members and approve them in one action.</div>
+        <form method="post" action="<?= url('/admin/members'); ?>" id="bulkApproveForm" class="d-flex align-items-center gap-2">
+            <?= csrf_field(); ?>
+            <input type="hidden" name="action" value="bulk_approve">
+            <button class="btn btn-success" type="submit" onclick="return confirm('Approve the selected members?');">Approve Selected</button>
+        </form>
+    </div>
     <div class="table-responsive">
         <table class="table align-middle">
             <thead>
                 <tr>
                     <th>Membership</th>
+                    <th class="text-center" style="width: 1%">
+                        <input type="checkbox" id="selectAllMembers" aria-label="Select all members">
+                    </th>
                     <th>Name</th>
                     <th>Contact</th>
                     <th>Location</th>
@@ -59,6 +70,9 @@ $selectedLgaId = (int) ($selectedLgaId ?? 0);
                 <?php foreach ($members as $member): ?>
                     <tr>
                         <td><?= htmlspecialchars((string) ($member['membership_number'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td class="text-center">
+                            <input type="checkbox" form="bulkApproveForm" name="member_ids[]" value="<?= (int) $member['id']; ?>" data-member-select aria-label="Select member">
+                        </td>
                         <td>
                             <div class="fw-semibold">
                                 <?= htmlspecialchars(trim((string) ($member['surname'] ?? '') . ' ' . (string) ($member['first_name'] ?? '') . ' ' . (string) ($member['other_name'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>
@@ -126,10 +140,20 @@ $selectedLgaId = (int) ($selectedLgaId ?? 0);
                 <?php endforeach; ?>
                 <?php if ($members === []): ?>
                     <tr>
-                        <td colspan="6" class="text-muted">No members found.</td>
+                        <td colspan="7" class="text-muted">No members found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+document.addEventListener('change', function (event) {
+    if (event.target && event.target.id === 'selectAllMembers') {
+        document.querySelectorAll('[data-member-select]').forEach(function (checkbox) {
+            checkbox.checked = event.target.checked;
+        });
+    }
+});
+</script>

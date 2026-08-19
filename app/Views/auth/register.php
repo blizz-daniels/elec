@@ -41,6 +41,7 @@ $pollingUnits = $pollingUnits ?? [];
                 <input class="form-control" name="state_of_residence" value="Ogun Resident" readonly>
             </div>
             <div class="col-md-6">
+                <label class="form-label fw-semibold">Date of Birth</label>
                 <input class="form-control" type="date" name="date_of_birth" value="<?= htmlspecialchars((string) old('date_of_birth'), ENT_QUOTES, 'UTF-8'); ?>" required>
             </div>
             <div class="col-md-6">

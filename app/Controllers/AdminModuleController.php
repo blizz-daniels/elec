@@ -248,6 +248,52 @@ final class AdminModuleController extends Controller
 
         $action = (string) $request->input('action', '');
         $memberId = (int) $request->input('member_id', 0);
+        if ($action === 'bulk_approve') {
+            $memberIds = $request->input('member_ids', []);
+            if (!is_array($memberIds)) {
+                $memberIds = [];
+            }
+
+            $memberIds = array_values(array_unique(array_filter(array_map('intval', $memberIds), static fn (int $value): bool => $value > 0)));
+            if ($memberIds === []) {
+                flash('error', 'Select at least one member to approve.');
+                redirect('/admin/members');
+            }
+
+            try {
+                $pdo->beginTransaction();
+
+                $approvedCount = 0;
+                foreach ($memberIds as $id) {
+                    $stmt = $pdo->prepare('UPDATE members SET status = :status, updated_at = NOW() WHERE id = :id');
+                    $stmt->execute([
+                        'status' => 'approved',
+                        'id' => $id,
+                    ]);
+
+                    $this->syncMemberUserAccount($pdo, $id, 'registered-member', 'active');
+
+                    try {
+                        (new \App\Services\MemberCardService())->issueForMember($id);
+                    } catch (\Throwable $cardError) {
+                        // Keep approving the remaining members even if one card fails.
+                    }
+
+                    $approvedCount++;
+                }
+
+                $pdo->commit();
+                flash('success', sprintf('%d member%s approved.', $approvedCount, $approvedCount === 1 ? '' : 's'));
+            } catch (\Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                flash('error', 'Could not approve the selected members.');
+            }
+
+            redirect('/admin/members');
+        }
+
         if ($memberId <= 0) {
             flash('error', 'A valid member is required.');
             redirect('/admin/members');
