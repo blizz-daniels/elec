@@ -10,17 +10,17 @@
         <div class="auth-card__head">
             <span class="info-label">Login</span>
             <h2>Access your account</h2>
-            <p>Use your demo email and the shared test password to enter the Laragon test environment.</p>
+            <p>Sign in securely to continue with your registration, membership, or operations workspace.</p>
         </div>
         <form method="post" action="<?= url('/login'); ?>" class="auth-form">
             <?= csrf_field(); ?>
             <div class="mb-3">
-                <label class="form-label fw-semibold">Email</label>
-                <input class="form-control form-control-lg" type="email" name="email" placeholder="Enter email address" required>
+                <label class="form-label fw-semibold" for="login-email">Email address</label>
+                <input class="form-control form-control-lg" id="login-email" type="email" name="email" autocomplete="email" placeholder="Enter email address" required>
             </div>
             <div class="mb-3">
-                <label class="form-label fw-semibold">Password</label>
-                <input class="form-control form-control-lg" type="password" name="password" placeholder="Enter password" required>
+                <label class="form-label fw-semibold" for="login-password">Password</label>
+                <input class="form-control form-control-lg" id="login-password" type="password" name="password" autocomplete="current-password" placeholder="Enter password" required>
             </div>
             <button class="btn btn--accent w-100" type="submit">Sign In</button>
         </form>

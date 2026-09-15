@@ -39,11 +39,13 @@ $sidebarItems = [
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="<?= url('assets/css/app.css'); ?>" rel="stylesheet">
     <link href="<?= url('assets/css/news.css'); ?>" rel="stylesheet">
+    <link href="<?= url('assets/css/youth-vanguard.css'); ?>" rel="stylesheet">
 </head>
-<body class="app-shell app-theme">
+<body class="app-shell app-theme yv-theme">
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <?php if (!$isAuthView): ?>
     <header class="site-header">
         <div class="container-fluid site-header__inner">
@@ -146,7 +148,7 @@ $sidebarItems = [
     </header>
 <?php endif; ?>
 
-<main class="app-main">
+<main class="app-main" id="main-content">
     <?php if ($message = flash('success')): ?>
         <div class="alert alert-success"><?= htmlspecialchars((string) $message, ENT_QUOTES, 'UTF-8'); ?></div>
     <?php endif; ?>

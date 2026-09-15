@@ -25,11 +25,11 @@ $memberCard = $memberCard ?? [];
 
 <div class="row justify-content-center">
     <div class="col-lg-8 col-xl-7">
-        <div class="card p-4 shadow-sm">
+        <div class="card p-4 shadow-sm member-profile-card">
             <div class="d-flex align-items-center gap-3 mb-4">
-                <div class="rounded-circle overflow-hidden d-flex align-items-center justify-content-center bg-success-subtle text-success fw-bold" style="width:72px;height:72px;font-size:1.5rem;">
+                <div class="rounded-circle overflow-hidden d-flex align-items-center justify-content-center bg-success-subtle text-success fw-bold member-profile-card__avatar">
                     <?php if ($photoUrl !== ''): ?>
-                        <img src="<?= htmlspecialchars(url($photoUrl), ENT_QUOTES, 'UTF-8'); ?>" alt="Profile photo" class="w-100 h-100" style="object-fit:cover;">
+                        <img src="<?= htmlspecialchars(url($photoUrl), ENT_QUOTES, 'UTF-8'); ?>" alt="Profile photo" class="w-100 h-100 member-profile-card__photo">
                     <?php else: ?>
                         <?= htmlspecialchars($avatar, ENT_QUOTES, 'UTF-8'); ?>
                     <?php endif; ?>
@@ -43,50 +43,50 @@ $memberCard = $memberCard ?? [];
 
             <div class="row g-3">
                 <div class="col-md-6">
-                    <div class="border rounded-3 p-3 h-100">
+                    <div class="border rounded-3 p-3 h-100 member-profile-card__detail">
                         <div class="small text-muted mb-1">Membership Number</div>
                         <div class="fw-semibold"><?= htmlspecialchars($membershipNumber !== '' ? $membershipNumber : '-', ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="border rounded-3 p-3 h-100">
+                    <div class="border rounded-3 p-3 h-100 member-profile-card__detail">
                         <div class="small text-muted mb-1">Status</div>
                         <div class="fw-semibold text-capitalize"><?= htmlspecialchars($status !== '' ? $status : '-', ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="border rounded-3 p-3 h-100">
+                    <div class="border rounded-3 p-3 h-100 member-profile-card__detail">
                         <div class="small text-muted mb-1">Email</div>
                         <div class="fw-semibold"><?= htmlspecialchars($email !== '' ? $email : '-', ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="border rounded-3 p-3 h-100">
+                    <div class="border rounded-3 p-3 h-100 member-profile-card__detail">
                         <div class="small text-muted mb-1">Phone</div>
                         <div class="fw-semibold"><?= htmlspecialchars($phone !== '' ? $phone : '-', ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="border rounded-3 p-3 h-100">
+                    <div class="border rounded-3 p-3 h-100 member-profile-card__detail">
                         <div class="small text-muted mb-1">LGA</div>
                         <div class="fw-semibold"><?= htmlspecialchars($lgaName !== '' ? $lgaName : '-', ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="border rounded-3 p-3 h-100">
+                    <div class="border rounded-3 p-3 h-100 member-profile-card__detail">
                         <div class="small text-muted mb-1">Ward</div>
                         <div class="fw-semibold"><?= htmlspecialchars($wardName !== '' ? $wardName : '-', ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                 </div>
                 <div class="col-md-12">
-                    <div class="border rounded-3 p-3 h-100">
+                    <div class="border rounded-3 p-3 h-100 member-profile-card__detail">
                         <div class="small text-muted mb-1">Polling Unit</div>
                         <div class="fw-semibold"><?= htmlspecialchars($pollingUnitName !== '' ? $pollingUnitName : '-', ENT_QUOTES, 'UTF-8'); ?></div>
                         <div class="text-muted small"><?= htmlspecialchars($pollingUnitCode !== '' ? $pollingUnitCode : '', ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                 </div>
                 <div class="col-md-12">
-                    <div class="border rounded-3 p-3 h-100">
+                    <div class="border rounded-3 p-3 h-100 member-profile-card__detail">
                         <div class="small text-muted mb-1">Last Login</div>
                         <div class="fw-semibold"><?= htmlspecialchars($lastLogin, ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
