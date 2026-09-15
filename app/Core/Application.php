@@ -10,6 +10,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\ElectionController;
 use App\Controllers\HomeController;
 use App\Controllers\MemberController;
+use App\Controllers\NewsController;
 use App\Controllers\NotificationController;
 use App\Controllers\ReportController;
 use App\Controllers\ResultController;
@@ -62,6 +63,8 @@ final class Application
         $router->get('/member/card/qr/download', [MemberController::class, 'downloadCardQr']);
         $router->get('/admin/members', [AdminModuleController::class, 'members']);
         $router->post('/admin/members', [AdminModuleController::class, 'members']);
+        $router->get('/admin/news', [NewsController::class, 'index']);
+        $router->post('/admin/news', [NewsController::class, 'index']);
         $router->get('/admin/executives', [AdminModuleController::class, 'executives']);
         $router->post('/admin/executives', [AdminModuleController::class, 'executives']);
         $router->get('/admin/geography', [AdminModuleController::class, 'geography']);

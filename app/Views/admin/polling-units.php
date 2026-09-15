@@ -58,6 +58,10 @@ $wards = $wards ?? [];
             <label class="form-label">Polling name</label>
             <input class="form-control" name="polling_name" placeholder="Ake Primary School PU" required>
         </div>
+        <div class="col-md-6">
+            <label class="form-label">House of Representatives</label>
+            <input class="form-control" name="house_of_representatives" placeholder="Abeokuta North / Odeda">
+        </div>
         <div class="col-md-4">
             <label class="form-label">Latitude</label>
             <input class="form-control" name="latitude" placeholder="7.1500000">

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 declare(strict_types=1);
 
@@ -14,6 +14,7 @@ $dashboardLabel = in_array($currentRole, ['registered-member', 'member'], true) 
 $sidebarItems = [
     ['label' => 'Dashboard', 'href' => $dashboardHref, 'roles' => null],
     ['label' => 'Members', 'href' => url('/admin/members'), 'roles' => ['super-admin', 'state-executive', 'lga-executive', 'ward-executive']],
+    ['label' => 'News', 'href' => url('/admin/news'), 'roles' => ['super-admin']],
     ['label' => 'Executives', 'href' => url('/admin/executives'), 'roles' => ['super-admin', 'state-executive']],
     ['label' => 'Geography', 'href' => url('/admin/geography'), 'roles' => ['super-admin', 'state-executive']],
     ['label' => 'Polling Units', 'href' => url('/admin/polling-units'), 'roles' => ['super-admin', 'state-executive', 'lga-executive']],
@@ -40,6 +41,7 @@ $sidebarItems = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
     <link href="<?= url('assets/css/app.css'); ?>" rel="stylesheet">
+    <link href="<?= url('assets/css/news.css'); ?>" rel="stylesheet">
 </head>
 <body class="app-shell app-theme">
 <?php if (!$isAuthView): ?>
@@ -86,6 +88,7 @@ $sidebarItems = [
                         <a class="site-nav__link" href="<?= url('/results'); ?>">Results</a>
                     <?php endif; ?>
                 <?php endif; ?>
+            </nav>
             <div class="site-actions d-none d-lg-flex">
                 <?php if ($currentUser): ?>
                     <a class="btn btn--ghost" href="<?= $dashboardHref; ?>"><?= htmlspecialchars($dashboardLabel, ENT_QUOTES, 'UTF-8'); ?></a>

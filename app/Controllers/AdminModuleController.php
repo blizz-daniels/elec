@@ -626,9 +626,9 @@ final class AdminModuleController extends Controller
 
                     $stmt = $pdo->prepare(
                         'INSERT INTO polling_units
-                            (senatorial_district_id, lga_id, ward_id, polling_code, polling_name, latitude, longitude, gps_address)
+                            (senatorial_district_id, lga_id, ward_id, polling_code, polling_name, house_of_representatives, latitude, longitude, gps_address)
                          VALUES
-                            (:senatorial_district_id, :lga_id, :ward_id, :polling_code, :polling_name, :latitude, :longitude, :gps_address)'
+                            (:senatorial_district_id, :lga_id, :ward_id, :polling_code, :polling_name, :house_of_representatives, :latitude, :longitude, :gps_address)'
                     );
                     $stmt->execute([
                         'senatorial_district_id' => $districtId,
@@ -636,6 +636,7 @@ final class AdminModuleController extends Controller
                         'ward_id' => $wardId,
                         'polling_code' => $code,
                         'polling_name' => $name,
+                        'house_of_representatives' => trim((string) $request->input('house_of_representatives', '')) ?: null,
                         'latitude' => $request->input('latitude') !== null && $request->input('latitude') !== '' ? (float) $request->input('latitude') : null,
                         'longitude' => $request->input('longitude') !== null && $request->input('longitude') !== '' ? (float) $request->input('longitude') : null,
                         'gps_address' => trim((string) $request->input('gps_address', '')) ?: null,
@@ -711,6 +712,7 @@ final class AdminModuleController extends Controller
                 $lgaName = $this->normalizeLgaName(trim((string) ($record['Local Government'] ?? '')));
                 $wardName = trim((string) ($record['Ward'] ?? ''));
                 $pollingName = trim((string) ($record['Polling Unit'] ?? ''));
+                $houseOfRepresentatives = trim((string) ($record['House of Representatives'] ?? ''));
                 $stateCode = trim((string) ($record['State Code'] ?? ''));
                 $lgaCode = trim((string) ($record['LGA Code'] ?? ''));
                 $wardCode = trim((string) ($record['Ward Code'] ?? ''));
@@ -742,7 +744,8 @@ final class AdminModuleController extends Controller
                     $lgaId,
                     $wardId,
                     $pollingCode !== '' ? $pollingCode : $stateCode . '/' . $lgaCode . '/' . $wardCode . '/' . $this->slugify($pollingName),
-                    $pollingName
+                    $pollingName,
+                    $houseOfRepresentatives
                 );
 
                 $rowCount++;
@@ -860,7 +863,7 @@ final class AdminModuleController extends Controller
         return (int) $pdo->lastInsertId();
     }
 
-    private function upsertPollingUnit(\PDO $pdo, int $districtId, int $lgaId, int $wardId, string $code, string $name): int
+    private function upsertPollingUnit(\PDO $pdo, int $districtId, int $lgaId, int $wardId, string $code, string $name, string $houseOfRepresentatives = ''): int
     {
         $stmt = $pdo->prepare('SELECT id FROM polling_units WHERE polling_code = :polling_code LIMIT 1');
         $stmt->execute(['polling_code' => $code]);
@@ -873,6 +876,7 @@ final class AdminModuleController extends Controller
                      lga_id = :lga_id,
                      ward_id = :ward_id,
                      polling_name = :polling_name,
+                     house_of_representatives = :house_of_representatives,
                      updated_at = NOW()
                  WHERE id = :id'
             );
@@ -881,6 +885,7 @@ final class AdminModuleController extends Controller
                 'lga_id' => $lgaId,
                 'ward_id' => $wardId,
                 'polling_name' => $name,
+                'house_of_representatives' => $houseOfRepresentatives !== '' ? $houseOfRepresentatives : null,
                 'id' => $pollingUnitId,
             ]);
 
@@ -888,8 +893,8 @@ final class AdminModuleController extends Controller
         }
 
         $insert = $pdo->prepare(
-            'INSERT INTO polling_units (senatorial_district_id, lga_id, ward_id, polling_code, polling_name, latitude, longitude, gps_address)
-             VALUES (:senatorial_district_id, :lga_id, :ward_id, :polling_code, :polling_name, NULL, NULL, NULL)'
+            'INSERT INTO polling_units (senatorial_district_id, lga_id, ward_id, polling_code, polling_name, house_of_representatives, latitude, longitude, gps_address)
+             VALUES (:senatorial_district_id, :lga_id, :ward_id, :polling_code, :polling_name, :house_of_representatives, NULL, NULL, NULL)'
         );
         $insert->execute([
             'senatorial_district_id' => $districtId,
@@ -897,6 +902,7 @@ final class AdminModuleController extends Controller
             'ward_id' => $wardId,
             'polling_code' => $code,
             'polling_name' => $name,
+            'house_of_representatives' => $houseOfRepresentatives !== '' ? $houseOfRepresentatives : null,
         ]);
 
         return (int) $pdo->lastInsertId();

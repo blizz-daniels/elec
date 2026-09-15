@@ -72,6 +72,7 @@ CREATE TABLE polling_units (
     ward_id BIGINT UNSIGNED NOT NULL,
     polling_code VARCHAR(50) NOT NULL UNIQUE,
     polling_name VARCHAR(150) NOT NULL,
+    house_of_representatives VARCHAR(190) NULL,
     latitude DECIMAL(10,7) NULL,
     longitude DECIMAL(10,7) NULL,
     gps_address VARCHAR(255) NULL,
@@ -298,6 +299,21 @@ CREATE TABLE notifications (
     CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE news_posts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    author_id BIGINT UNSIGNED NULL,
+    title VARCHAR(190) NOT NULL,
+    summary VARCHAR(500) NULL,
+    content MEDIUMTEXT NOT NULL,
+    status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+    is_pinned TINYINT(1) NOT NULL DEFAULT 0,
+    published_at DATETIME NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_news_posts_public (status, published_at),
+    INDEX idx_news_posts_pinned (is_pinned, published_at),
+    CONSTRAINT fk_news_posts_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
 CREATE TABLE activity_logs (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NULL,

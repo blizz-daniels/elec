@@ -65,8 +65,8 @@ $pollingUnits = $pollingUnits ?? [];
                     name="polling_unit_id"
                     id="pollingUnitSelect"
                     data-searchable-select
-                    data-searchable-fields="polling_no,polling_code,ward,lga,district,name"
-                    data-searchable-placeholder="Search by unit no, code, ward, LGA, district, or name"
+                    data-searchable-fields="name,ward,lga,district,representative,address,state,polling_no,polling_code"
+                    data-searchable-placeholder="Try a name, place, code, ward, LGA, or constituency"
                     required
                 >
                     <option value="">Select polling unit</option>
@@ -79,13 +79,16 @@ $pollingUnits = $pollingUnits ?? [];
                             data-search-ward="<?= htmlspecialchars((string) $pollingUnit['ward_name'], ENT_QUOTES, 'UTF-8'); ?>"
                             data-search-lga="<?= htmlspecialchars((string) $pollingUnit['lga_name'], ENT_QUOTES, 'UTF-8'); ?>"
                             data-search-district="<?= htmlspecialchars((string) $pollingUnit['district_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-representative="<?= htmlspecialchars((string) ($pollingUnit['house_of_representatives'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-address="<?= htmlspecialchars((string) ($pollingUnit['gps_address'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                            data-search-state="<?= htmlspecialchars((string) ($pollingUnit['state_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                             <?= (string) old('polling_unit_id') === (string) $pollingUnit['id'] ? 'selected' : ''; ?>
                         >
-                            <?= htmlspecialchars((string) $pollingUnit['polling_name'] . ' [' . (string) ($pollingUnit['polling_unit_no'] ?? '') . '] | ' . (string) $pollingUnit['polling_code'] . ' | ' . (string) $pollingUnit['ward_name'] . ' | ' . (string) $pollingUnit['lga_name'] . ' | ' . (string) $pollingUnit['district_name'], ENT_QUOTES, 'UTF-8'); ?>
+                            <?= htmlspecialchars((string) $pollingUnit['polling_name'] . ' [' . (string) ($pollingUnit['polling_unit_no'] ?? '') . '] | ' . (string) $pollingUnit['polling_code'] . ' | ' . (string) $pollingUnit['ward_name'] . ' | ' . (string) $pollingUnit['lga_name'] . ' | ' . (string) $pollingUnit['district_name'] . (!empty($pollingUnit['house_of_representatives']) ? ' | Rep: ' . (string) $pollingUnit['house_of_representatives'] : ''), ENT_QUOTES, 'UTF-8'); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <div class="form-text">Search by any part of the unit number, code, ward, LGA, district, or unit name.</div>
+                <div class="form-text">Search uses all location details and ranks partial names, abbreviations, word-order changes, and close spellings first.</div>
             </div>
 
             <div class="col-12">
@@ -114,6 +117,14 @@ $pollingUnits = $pollingUnits ?? [];
                         <div class="col-md-4">
                             <div class="small text-muted">Senatorial District</div>
                             <div class="fw-semibold" data-summary-field="district">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">House of Representatives</div>
+                            <div class="fw-semibold" data-summary-field="representative">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">GPS / Location Address</div>
+                            <div class="fw-semibold" data-summary-field="address">-</div>
                         </div>
                     </div>
                 </div>
@@ -162,6 +173,8 @@ $pollingUnits = $pollingUnits ?? [];
             ward: selected?.dataset.searchWard || '',
             lga: selected?.dataset.searchLga || '',
             district: selected?.dataset.searchDistrict || '',
+            representative: selected?.dataset.searchRepresentative || '',
+            address: selected?.dataset.searchAddress || '',
         };
 
         summaryFields.forEach((field) => {

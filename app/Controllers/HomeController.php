@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Models\NewsPost;
 use App\Support\Request;
 
 final class HomeController extends Controller
@@ -13,6 +14,7 @@ final class HomeController extends Controller
     {
         $this->view('home/index', [
             'title' => 'Home',
+            'newsPosts' => (new NewsPost())->published(4),
         ]);
     }
 
@@ -38,7 +40,10 @@ final class HomeController extends Controller
 
     public function news(Request $request): void
     {
-        $this->view('home/news', ['title' => 'News']);
+        $this->view('home/news', [
+            'title' => 'News',
+            'newsPosts' => (new NewsPost())->published(),
+        ]);
     }
 
     public function contact(Request $request): void

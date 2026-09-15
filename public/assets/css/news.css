@@ -1,0 +1,139 @@
+.news-feature,
+.news-list {
+    border-radius: 8px;
+}
+
+.news-feature__body {
+    padding: 1.2rem 1.3rem 1.5rem;
+}
+
+.news-feature__eyebrow {
+    color: var(--green);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+}
+
+.news-feature__body h3 {
+    font-size: 1.45rem;
+    line-height: 1.35;
+    margin-bottom: 0.6rem;
+}
+
+.news-feature__body p {
+    color: var(--muted);
+    line-height: 1.75;
+    margin: 0.8rem 0 1.15rem;
+}
+
+.news-item {
+    border-radius: 8px;
+}
+
+.news-item__meta a,
+.news-link {
+    color: var(--green);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.news-item__meta a:hover,
+.news-link:hover {
+    text-decoration: underline;
+}
+
+.news-item--empty {
+    color: var(--muted);
+}
+
+.public-news {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 4rem 1.25rem;
+}
+
+.public-news__heading {
+    max-width: 680px;
+    margin-bottom: 2rem;
+}
+
+.public-news__heading h1 {
+    font-size: 2.25rem;
+    margin: 0.45rem 0 0.75rem;
+}
+
+.public-news__heading p {
+    color: var(--muted);
+    margin: 0;
+}
+
+.news-archive-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.news-archive-item,
+.news-empty-state {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 1.4rem;
+}
+
+.news-archive-item__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.news-pin {
+    color: var(--green);
+    font-weight: 800;
+}
+
+.news-archive-item h2 {
+    font-size: 1.3rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.news-archive-item__summary {
+    color: var(--muted);
+    font-weight: 600;
+    line-height: 1.65;
+    margin-bottom: 0.85rem;
+}
+
+.news-archive-item__content {
+    line-height: 1.75;
+}
+
+.news-archive-item__author {
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 1.2rem;
+    padding-top: 0.9rem;
+}
+
+@media (max-width: 575.98px) {
+    .public-news {
+        padding: 2.5rem 1rem;
+    }
+
+    .public-news__heading h1 {
+        font-size: 1.8rem;
+    }
+
+    .news-archive-item__meta {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+}

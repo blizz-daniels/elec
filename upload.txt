@@ -1,0 +1,6 @@
+scp ./app/Controllers/AuthController.php root@104.207.73.249:/var/www/elec/app/Controllers/AuthController.php
+scp ./app/Controllers/AdminModuleController.php root@104.207.73.249:/var/www/elec/app/Controllers/AdminModuleController.php
+scp ./app/Views/auth/register.php root@104.207.73.249:/var/www/elec/app/Views/auth/register.php
+scp ./app/Views/admin/polling-units.php root@104.207.73.249:/var/www/elec/app/Views/admin/polling-units.php
+scp ./public/assets/js/app.js root@104.207.73.249:/var/www/elec/public/assets/js/app.js
+scp ./database/upgrade_polling_unit_search.sql root@104.207.73.249:/var/www/elec/database/upgrade_polling_unit_search.sql

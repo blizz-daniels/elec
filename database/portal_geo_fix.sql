@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS polling_units (
     ward_id BIGINT UNSIGNED NOT NULL,
     polling_code VARCHAR(50) NOT NULL UNIQUE,
     polling_name VARCHAR(150) NOT NULL,
+    house_of_representatives VARCHAR(190) NULL,
     latitude DECIMAL(10,7) NULL,
     longitude DECIMAL(10,7) NULL,
     gps_address VARCHAR(255) NULL,

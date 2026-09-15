@@ -13,6 +13,7 @@ use App\Support\FileUpload;
 use App\Support\Request;
 use App\Support\Validator;
 use App\Support\Session;
+use App\Support\Config;
 
 final class AuthController extends Controller
 {
@@ -51,6 +52,7 @@ final class AuthController extends Controller
     public function showRegister(Request $request): void
     {
         $pdo = Database::pdo();
+        $defaultState = trim((string) Config::get('DEFAULT_STATE', 'Ogun State'));
 
         $this->view('auth/register', [
             'title' => 'Register',
@@ -68,15 +70,18 @@ final class AuthController extends Controller
                  ORDER BY wards.name'
             )->fetchAll(),
             'pollingUnits' => array_map(
-                static function (array $unit): array {
+                static function (array $unit) use ($defaultState): array {
                     $parts = array_values(array_filter(explode('/', (string) ($unit['polling_code'] ?? '')), static fn (string $part): bool => $part !== ''));
                     $unit['polling_unit_no'] = $parts !== [] ? (string) end($parts) : '';
+                    $unit['state_name'] = $defaultState;
                     return $unit;
                 },
                 $pdo->query(
                     'SELECT polling_units.id,
                             polling_units.polling_name,
                             polling_units.polling_code,
+                            polling_units.house_of_representatives,
+                            polling_units.gps_address,
                             polling_units.senatorial_district_id,
                             polling_units.lga_id,
                             polling_units.ward_id,

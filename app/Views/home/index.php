@@ -1,4 +1,4 @@
-﻿<section class="hero-section">
+<section class="hero-section">
     <div class="hero-grid">
         <div class="hero-copy">
             <span class="hero-badge">Yayi Youth Vanguard</span>
@@ -107,35 +107,4 @@
     </div>
 </section>
 
-<section class="news-section">
-    <div class="section-heading" style="padding:0;">
-        <div class="section-heading__eyebrow">News</div>
-        <h2>Updates and announcements</h2>
-    </div>
-    <div class="news-grid">
-        <article class="news-feature">
-            <div class="news-feature__media"></div>
-            <div class="news-feature__body">
-                <p>Catch up with updates and notices happening across the organization. This space can later connect to a real CMS or database-driven news feed.</p>
-            </div>
-        </article>
-        <div class="news-list">
-            <article class="news-item">
-                <h3>Marshal onboarding training starts across the state</h3>
-                <p>Polling marshals and ward executives will get access to appointment and verification workflows in the next release.</p>
-                <div class="news-item__meta"><span>Posted today</span><span>Read more</span></div>
-            </article>
-            <article class="news-item">
-                <h3>Membership registration now supports QR cards</h3>
-                <p>Members will receive a membership number, QR code, and downloadable card after approval.</p>
-                <div class="news-item__meta"><span>Posted today</span><span>Read more</span></div>
-            </article>
-            <article class="news-item">
-                <h3>Membership dashboard is being prepared for live use</h3>
-                <p>Charts, filters, and status-based approval flows are ready to be connected to the database.</p>
-                <div class="news-item__meta"><span>Posted today</span><span>Read more</span></div>
-            </article>
-        </div>
-    </div>
-</section>
-
+<?php require __DIR__ . '/../partials/home-news.php'; ?>

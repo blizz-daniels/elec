@@ -13,6 +13,7 @@
             <div class="site-footer__title" style="font-size:1.1rem;">Link</div>
             <a href="<?= url('/'); ?>">Home</a>
             <a href="<?= url('/about'); ?>">About</a>
+            <a href="<?= url('/news'); ?>">News</a>
             <a href="<?= url('/login'); ?>">Login</a>
             <a href="<?= url('/register'); ?>">Register</a>
         </div>
