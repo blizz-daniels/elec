@@ -1,18 +1,18 @@
-﻿<?php
+<?php
 
 declare(strict_types=1);
 
 return [
-    'APP_NAME' => 'Yayi Youth Vanguard Membership & Polling Unit Marshal Registration',
+    'APP_NAME' => 'Yayi Youth Vanguard',
     'APP_ENV' => 'production',
     'APP_DEBUG' => false,
-    'APP_URL' => 'http://yayivanguard.ink',
+    'APP_URL' => 'https://yayivanguard.ink',
 
     'DB_HOST' => 'localhost',
     'DB_PORT' => '3306',
     'DB_DATABASE' => 'elec_db',
     'DB_USERNAME' => 'elec_user',
-    'DB_PASSWORD' => 'Da4lion246$$$',
+    'DB_PASSWORD' => 'Da4lion246$',
 
     'MAIL_MAILER' => 'smtp',
     'MAIL_HOST' => 'smtp.example.com',
