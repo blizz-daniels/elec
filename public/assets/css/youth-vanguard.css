@@ -194,7 +194,7 @@ body.yv-theme {
   .dashboard-sidebar__links { grid-template-columns: 1fr; }
   .yv-theme .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .yv-theme .table { min-width: 600px; }
-  .yv-theme .btn { width: 100%; }
+  .yv-theme .auth-form .btn, .yv-theme .hero-actions .btn, .yv-theme .cta-banner__action .btn { width: 100%; }
   .yv-theme .btn + .btn { margin-top: .55rem; }
   .hero-copy .btn, .site-mobile-menu__actions .btn { width: 100%; }
 }
@@ -232,4 +232,11 @@ body.yv-theme {
   .yv-theme .auth-hero__title { font-size: 2rem; }
   .yv-theme .auth-hero__text { font-size: .95rem; }
   .yv-theme .auth-card { padding: 1.25rem; }
+}
+@media (max-width: 575.98px) {
+  .yv-theme .site-header__inner { display: flex; flex-wrap: nowrap; gap: .6rem; padding: .65rem .85rem; }
+  .yv-theme .brand-mark { flex: 1 1 auto; overflow: hidden; }
+  .yv-theme .brand-mark__text { overflow: hidden; }
+  .yv-theme .brand-mark__text strong { display: block; max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .yv-theme .site-menu-toggle { display: inline-flex; flex: 0 0 46px; width: 46px; min-width: 46px; height: 46px; margin: 0; padding: 0; }
 }

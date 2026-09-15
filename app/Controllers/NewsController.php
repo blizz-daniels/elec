@@ -9,10 +9,15 @@ use App\Models\NewsPost;
 use App\Support\Auth;
 use App\Support\Csrf;
 use App\Support\Database;
+use App\Support\NewsImage;
 use App\Support\Request;
+use App\Support\Validator;
+use Throwable;
 
 final class NewsController extends Controller
 {
+    private const IMAGE_MAX_KB = 5120;
+
     public function index(Request $request): void
     {
         Auth::requiresRole(['super-admin']);
@@ -69,9 +74,13 @@ final class NewsController extends Controller
         }
 
         if ($action === 'delete') {
-            $posts->remove($postId);
-            $this->logActivity('news.deleted', $postId, (string) $post['title']);
-            flash('success', 'News post deleted.');
+            if ($posts->remove($postId)) {
+                NewsImage::remove((string) ($post['image_path'] ?? ''));
+                $this->logActivity('news.deleted', $postId, (string) $post['title']);
+                flash('success', 'News post deleted.');
+            } else {
+                flash('error', 'The news post could not be deleted.');
+            }
             redirect('/admin/news');
         }
 
@@ -85,7 +94,8 @@ final class NewsController extends Controller
             $publishedAt = $status === 'published'
                 ? ((string) ($post['published_at'] ?? '') ?: date('Y-m-d H:i:s'))
                 : null;
-            $posts->updatePublicationStatus($postId, $status, $publishedAt);
+            $isPriority = $status === 'published' ? (int) ($post['is_priority'] ?? 0) : 0;
+            $posts->updatePublicationStatus($postId, $status, $publishedAt, $isPriority);
             $this->logActivity('news.' . $status, $postId, (string) $post['title']);
             flash('success', $status === 'published' ? 'News post published.' : 'News post returned to draft.');
             redirect('/admin/news');
@@ -102,28 +112,60 @@ final class NewsController extends Controller
         $content = trim((string) $request->input('content', ''));
         $status = (string) $request->input('status', 'draft');
         $isPinned = (int) $request->input('is_pinned', 0) === 1 ? 1 : 0;
+        $isPriority = $status === 'published' && (int) $request->input('is_priority', 0) === 1 ? 1 : 0;
+        $returnUrl = $postId > 0 ? '/admin/news?edit=' . $postId : '/admin/news';
 
         if ($title === '' || mb_strlen($title) > 190) {
             flash('error', 'Enter a title of up to 190 characters.');
-            redirect($postId > 0 ? '/admin/news?edit=' . $postId : '/admin/news');
+            redirect($returnUrl);
         }
         if (mb_strlen($summary) > 500) {
             flash('error', 'The summary may not exceed 500 characters.');
-            redirect($postId > 0 ? '/admin/news?edit=' . $postId : '/admin/news');
+            redirect($returnUrl);
         }
         if ($content === '' || mb_strlen($content) > 20000) {
             flash('error', 'Enter news content of up to 20,000 characters.');
-            redirect($postId > 0 ? '/admin/news?edit=' . $postId : '/admin/news');
+            redirect($returnUrl);
         }
         if (!in_array($status, ['draft', 'published'], true)) {
             flash('error', 'Invalid publication status.');
-            redirect($postId > 0 ? '/admin/news?edit=' . $postId : '/admin/news');
+            redirect($returnUrl);
         }
 
         $existing = $postId > 0 ? $posts->find($postId) : null;
         if ($postId > 0 && $existing === null) {
             flash('error', 'News post not found.');
             redirect('/admin/news');
+        }
+
+        $photo = $request->file('image');
+        $hasNewPhoto = $photo !== null && (int) ($photo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+        if ($hasNewPhoto) {
+            if ((int) ($photo['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+                flash('error', 'News photo upload could not be processed. Please try again.');
+                redirect($returnUrl);
+            }
+            if (!Validator::maxBytes($photo, self::IMAGE_MAX_KB)) {
+                flash('error', 'News photo must be 5MB or smaller.');
+                redirect($returnUrl);
+            }
+            if (!Validator::mimeIn($photo, ['image/jpeg', 'image/png', 'image/webp'])) {
+                flash('error', 'News photo must be a JPG, PNG, or WebP image.');
+                redirect($returnUrl);
+            }
+        }
+
+        $oldImagePath = (string) ($existing['image_path'] ?? '');
+        $imagePath = (int) $request->input('remove_image', 0) === 1 ? null : ($oldImagePath !== '' ? $oldImagePath : null);
+        $newImagePath = null;
+        if ($hasNewPhoto) {
+            try {
+                $newImagePath = NewsImage::store($photo);
+                $imagePath = $newImagePath;
+            } catch (Throwable $exception) {
+                flash('error', $exception->getMessage());
+                redirect($returnUrl);
+            }
         }
 
         $publishedAt = $status === 'published'
@@ -135,20 +177,46 @@ final class NewsController extends Controller
             'content' => $content,
             'status' => $status,
             'is_pinned' => $isPinned,
+            'image_path' => $imagePath,
+            'is_priority' => $isPriority,
             'published_at' => $publishedAt,
         ];
 
-        if ($existing !== null) {
-            $posts->updatePost($postId, $data);
-            $this->logActivity('news.updated', $postId, $title);
-            flash('success', 'News post updated.');
-        } else {
-            $currentUser = Auth::user() ?? [];
-            $postId = $posts->create($data + ['author_id' => (int) ($currentUser['id'] ?? 0)]);
-            $this->logActivity('news.created', $postId, $title);
-            flash('success', $status === 'published' ? 'News post published.' : 'News draft saved.');
+        $pdo = Database::pdo();
+        try {
+            $pdo->beginTransaction();
+            if ($isPriority === 1) {
+                $posts->clearPriority();
+            }
+
+            if ($existing !== null) {
+                $posts->updatePost($postId, $data);
+                $activity = 'news.updated';
+                $success = 'News post updated.';
+            } else {
+                $currentUser = Auth::user() ?? [];
+                $postId = $posts->create($data + ['author_id' => (int) ($currentUser['id'] ?? 0)]);
+                $activity = 'news.created';
+                $success = $status === 'published' ? 'News post published.' : 'News draft saved.';
+            }
+            $pdo->commit();
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            if ($newImagePath !== null) {
+                NewsImage::remove($newImagePath);
+            }
+            flash('error', 'The news post could not be saved. Please try again.');
+            redirect($returnUrl);
         }
 
+        if ($oldImagePath !== '' && $oldImagePath !== $imagePath) {
+            NewsImage::remove($oldImagePath);
+        }
+
+        $this->logActivity($activity, $postId, $title);
+        flash('success', $success);
         redirect('/admin/news');
     }
 

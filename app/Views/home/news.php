@@ -20,11 +20,19 @@ $newsExcerpt = static function (array $post): string {
     <?php if ($newsPosts !== []): ?>
         <div class="news-archive-grid">
             <?php foreach ($newsPosts as $post): ?>
-                <article class="news-archive-item">
+                <?php $imagePath = trim((string) ($post['image_path'] ?? '')); ?>
+                <article class="news-archive-item <?= (int) ($post['is_priority'] ?? 0) === 1 ? 'news-archive-item--priority' : ''; ?>" id="news-<?= (int) $post['id']; ?>">
+                    <?php if ($imagePath !== ''): ?>
+                        <img class="news-archive-item__image" src="<?= htmlspecialchars(url($imagePath), ENT_QUOTES, 'UTF-8'); ?>" alt="<?= htmlspecialchars((string) $post['title'], ENT_QUOTES, 'UTF-8'); ?>" loading="lazy">
+                    <?php endif; ?>
                     <div class="news-archive-item__meta">
-                        <?php if ((int) ($post['is_pinned'] ?? 0) === 1): ?>
-                            <span class="news-pin"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i> Pinned</span>
-                        <?php endif; ?>
+                        <div>
+                            <?php if ((int) ($post['is_priority'] ?? 0) === 1): ?>
+                                <span class="news-priority-label"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Priority News</span>
+                            <?php elseif ((int) ($post['is_pinned'] ?? 0) === 1): ?>
+                                <span class="news-pin"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i> Pinned</span>
+                            <?php endif; ?>
+                        </div>
                         <time datetime="<?= htmlspecialchars((string) $post['published_at'], ENT_QUOTES, 'UTF-8'); ?>">
                             <?= htmlspecialchars(date('F j, Y', strtotime((string) $post['published_at'])), ENT_QUOTES, 'UTF-8'); ?>
                         </time>

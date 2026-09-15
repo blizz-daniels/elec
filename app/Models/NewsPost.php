@@ -18,7 +18,7 @@ final class NewsPost extends BaseModel
              WHERE news_posts.status = 'published'
                AND news_posts.published_at IS NOT NULL
                AND news_posts.published_at <= NOW()
-             ORDER BY news_posts.is_pinned DESC, news_posts.published_at DESC, news_posts.id DESC
+             ORDER BY news_posts.is_priority DESC, news_posts.is_pinned DESC, news_posts.published_at DESC, news_posts.id DESC
              LIMIT {$limit}"
         );
         $stmt->execute();
@@ -38,11 +38,16 @@ final class NewsPost extends BaseModel
             $params['status'] = $status;
         }
 
-        $sql .= ' ORDER BY news_posts.updated_at DESC, news_posts.id DESC';
+        $sql .= ' ORDER BY news_posts.is_priority DESC, news_posts.updated_at DESC, news_posts.id DESC';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
 
         return $stmt->fetchAll();
+    }
+
+    public function clearPriority(): bool
+    {
+        return $this->pdo->exec('UPDATE news_posts SET is_priority = 0 WHERE is_priority = 1') !== false;
     }
 
     public function updatePost(int $id, array $data): bool
@@ -54,6 +59,8 @@ final class NewsPost extends BaseModel
                  content = :content,
                  status = :status,
                  is_pinned = :is_pinned,
+                 image_path = :image_path,
+                 is_priority = :is_priority,
                  published_at = :published_at,
                  updated_at = NOW()
              WHERE id = :id'
@@ -62,11 +69,14 @@ final class NewsPost extends BaseModel
         return $stmt->execute($data + ['id' => $id]);
     }
 
-    public function updatePublicationStatus(int $id, string $status, ?string $publishedAt): bool
+    public function updatePublicationStatus(int $id, string $status, ?string $publishedAt, int $isPriority): bool
     {
         $stmt = $this->pdo->prepare(
             'UPDATE news_posts
-             SET status = :status, published_at = :published_at, updated_at = NOW()
+             SET status = :status,
+                 published_at = :published_at,
+                 is_priority = :is_priority,
+                 updated_at = NOW()
              WHERE id = :id'
         );
 
@@ -74,6 +84,7 @@ final class NewsPost extends BaseModel
             'id' => $id,
             'status' => $status,
             'published_at' => $publishedAt,
+            'is_priority' => $isPriority,
         ]);
     }
 
