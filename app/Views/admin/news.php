@@ -64,7 +64,7 @@ foreach ($posts as $post) {
         <div class="col-lg-7">
             <label class="form-label" for="news-image">Add photo</label>
             <input class="form-control" id="news-image" type="file" name="image" accept="image/jpeg,image/png,image/webp">
-            <div class="form-text">JPG, PNG, or WebP. Maximum 5MB. Photos are automatically cropped and optimized for the news layout.</div>
+            <div class="form-text">JPG, PNG, or WebP. Maximum 5MB. Photos are proportionally resized when needed and always keep their original shape.</div>
             <?php if ($editingImage !== ''): ?>
                 <div class="form-check mt-2">
                     <input class="form-check-input" type="checkbox" id="news-remove-image" name="remove_image" value="1">

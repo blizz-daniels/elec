@@ -7,7 +7,7 @@ namespace App\Support;
 final class NewsImage
 {
     private const MAX_WIDTH = 1280;
-    private const ASPECT_RATIO = 16 / 9;
+    private const MAX_HEIGHT = 1600;
 
     public static function store(array $file): string
     {
@@ -35,10 +35,10 @@ final class NewsImage
         $source = self::orientJpeg($source, $temporaryPath, $type);
         $sourceWidth = imagesx($source);
         $sourceHeight = imagesy($source);
-        [$sourceX, $sourceY, $cropWidth, $cropHeight] = self::cropArea($sourceWidth, $sourceHeight);
+        $scale = min(1, self::MAX_WIDTH / $sourceWidth, self::MAX_HEIGHT / $sourceHeight);
+        $targetWidth = max(1, (int) round($sourceWidth * $scale));
+        $targetHeight = max(1, (int) round($sourceHeight * $scale));
 
-        $targetWidth = min(self::MAX_WIDTH, $cropWidth);
-        $targetHeight = max(1, (int) round($targetWidth / self::ASPECT_RATIO));
         $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
         if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_WEBP) {
             imagealphablending($canvas, false);
@@ -50,17 +50,18 @@ final class NewsImage
             imagefill($canvas, 0, 0, $white);
         }
 
+        // Resample the complete image. No crop is applied, so its original proportions remain intact.
         imagecopyresampled(
             $canvas,
             $source,
             0,
             0,
-            $sourceX,
-            $sourceY,
+            0,
+            0,
             $targetWidth,
             $targetHeight,
-            $cropWidth,
-            $cropHeight
+            $sourceWidth,
+            $sourceHeight
         );
 
         $directory = Config::basePath('public/uploads/news');
@@ -107,20 +108,6 @@ final class NewsImage
         if (is_file($path)) {
             @unlink($path);
         }
-    }
-
-    private static function cropArea(int $width, int $height): array
-    {
-        $sourceAspect = $width / max(1, $height);
-        if ($sourceAspect > self::ASPECT_RATIO) {
-            $cropHeight = $height;
-            $cropWidth = (int) round($height * self::ASPECT_RATIO);
-            return [(int) floor(($width - $cropWidth) / 2), 0, $cropWidth, $cropHeight];
-        }
-
-        $cropWidth = $width;
-        $cropHeight = (int) round($width / self::ASPECT_RATIO);
-        return [0, (int) floor(($height - $cropHeight) / 2), $cropWidth, $cropHeight];
     }
 
     private static function orientJpeg(\GdImage $image, string $path, int $type): \GdImage
